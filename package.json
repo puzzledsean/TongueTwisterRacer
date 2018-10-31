@@ -1,5 +1,5 @@
 {
-  "name": "Tongue Twister Racer",
+  "name": "tongue-twister-racer",
   "version": "1.0.0",
   "description": "",
   "main": "src/server/index.js",
@@ -7,7 +7,7 @@
     "build": "webpack --mode production",
     "start": "npm run build && node src/server/index.js",
     "client": "webpack-dev-server --mode development --devtool inline-source-map --hot",
-    "server": "nodemon src/server/index.js",
+    "server": "nodemon app.js",
     "dev": "concurrently \"npm run server\" \"npm run client\""
   },
   "author": "puzzledsean",
@@ -35,6 +35,9 @@
     "file-loader": "^2.0.0",
     "html-webpack-plugin": "^3.2.0",
     "nodemon": "^1.17.3",
+    "react-router-dom": "^4.3.1",
+    "socket.io": "^2.1.1",
+    "socket.io-client": "^2.1.1",
     "style-loader": "^0.23.0",
     "url-loader": "^1.0.1",
     "webpack": "^4.5.0",

@@ -1,10 +1,17 @@
-const express = require('express');
-const os = require('os');
+const express = require("express");
+const router = express.Router();
+const path = require('path')
 
-const app = express();
+router.get("/", (req, res) => {
+  res.send({ response: "I am alive" }).status(200);
+});
 
-app.use(express.static('dist'));
-app.get('/', (req, res) => res.send({ response: 'hi' }));
-app.get('/api/getUsername', (req, res) => res.send({ username: os.userInfo().username }));
+router.get("/*", (req, res) => {
+  console.log('hello!!!')
+});
 
-app.listen(8080, () => console.log('Listening on port 8080!'));
+// router.get('*', function (request, response){
+//     response.sendFile(path.resolve(__dirname, '..', '..', 'public', 'index.html'))
+//   })
+
+module.exports = router;

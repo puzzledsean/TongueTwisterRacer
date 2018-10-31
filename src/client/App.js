@@ -1,18 +1,17 @@
-import React, { Component } from 'react';
-import './app.css';
-import ReactImage from './react.png';
+import React from "react";
+import { BrowserRouter as Router, Route, Link } from "react-router-dom";
+import Home from './components/Home';
+import Join from './components/Join';
+import Lobby from './components/Lobby';
 
-export default class App extends Component {
-  state = { username: null };
+const AppRouter = () => (
+  <Router>
+    <div>
+      <Route path="/" exact component={Home} />
+      <Route path="/join" component={Join} />
+      <Route path="/lobby/:id" render={props => <Lobby {...props}  /> } /> 
+    </div>
+  </Router>
+);
 
-  componentDidMount() {
-  }
-
-  render() {
-    return (
-      <div>
-        Tongue Twist Racer
-      </div>
-    );
-  }
-}
+export default AppRouter;
