@@ -1,46 +1,45 @@
-const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+var path = require('path')
+var webpack = require('webpack')
+var nodeExternals = require('webpack-node-externals')
 
-const outputDirectory = 'dist';
-
-module.exports = {
+var browserConfig = {
   entry: './src/client/index.js',
   output: {
-    path: path.join(__dirname, outputDirectory),
-    filename: 'bundle.js'
+    path: path.resolve(__dirname, 'public'),
+    filename: 'bundle.js',
+    publicPath: '/'
   },
   module: {
     rules: [
-      {
-        test: /\.js$/,
-        exclude: /node_modules/,
-        use: {
-          loader: 'babel-loader'
-        }
-      },
-      {
-        test: /\.css$/,
-        use: ['style-loader', 'css-loader']
-      },
-      {
-        test: /\.(png|woff|woff2|eot|ttf|svg)$/,
-        loader: 'url-loader?limit=100000'
-      }
+      { test: /\.(js)$/, use: 'babel-loader' },
     ]
   },
-  devServer: {
-    port: 3000,
-    open: true,
-    proxy: {
-      '/api': 'http://localhost:8080'
-    }
-  },
   plugins: [
-    new CleanWebpackPlugin([outputDirectory]),
-    new HtmlWebpackPlugin({
-      template: './public/index.html',
-      favicon: './public/favicon.ico'
+    new webpack.DefinePlugin({
+      __isBrowser__: "true"
     })
   ]
-};
+}
+
+var serverConfig = {
+  entry: './src/server/index.js',
+  target: 'node',
+  externals: [nodeExternals()],
+  output: {
+    path: __dirname,
+    filename: 'server.js',
+    publicPath: '/'
+  },
+  module: {
+    rules: [
+      { test: /\.(js)$/, use: 'babel-loader' }
+    ]
+  },
+  plugins: [
+    new webpack.DefinePlugin({
+      __isBrowser__: "false"
+    })
+  ]
+}
+
+module.exports = [browserConfig, serverConfig]

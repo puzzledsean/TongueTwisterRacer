@@ -1,17 +1,57 @@
-const express = require("express");
-const router = express.Router();
-const path = require('path')
+import express from "express"
+import cors from "cors"
+import React from "react"
+import { renderToString } from "react-dom/server"
+import { StaticRouter, matchPath } from "react-router-dom"
+import serialize from "serialize-javascript"
+import App from '../shared/App'
+import routes from '../shared/routes'
 
-router.get("/", (req, res) => {
-  res.send({ response: "I am alive" }).status(200);
-});
+const app = express()
 
-router.get("/*", (req, res) => {
-  console.log('hello!!!')
-});
+app.use(cors())
+app.use(express.static("public"))
 
-// router.get('*', function (request, response){
-//     response.sendFile(path.resolve(__dirname, '..', '..', 'public', 'index.html'))
-//   })
+app.get("*", (req, res, next) => {
+  const activeRoute = routes.find((route) => matchPath(req.url, route)) || {}
 
-module.exports = router;
+  const promise = activeRoute.fetchInitialData
+    ? activeRoute.fetchInitialData(req.path)
+    : Promise.resolve()
+
+  promise.then((data) => {
+    const context = { data }
+
+    const markup = renderToString(
+      <StaticRouter location={req.url} context={context}>
+        <App />
+      </StaticRouter>
+    )
+
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Tongue Twister Racer</title>
+          <script src="/bundle.js" defer></script>
+          <script>window.__INITIAL_DATA__ = ${serialize(data)}</script>
+        </head>
+
+        <body>
+          <div id="app">${markup}</div>
+        </body>
+      </html>
+    `)
+  }).catch(next)
+})
+
+app.listen(3000, () => {
+  console.log(`Server is listening on port: 3000`)
+})
+
+/*
+  1) Just get shared App rendering to string on server then taking over on client.
+  2) Pass data to <App /> on server. Show diff. Add data to window then pick it up on the client too.
+  3) Instead of static data move to dynamic data (github gists)
+  4) add in routing.
+*/
