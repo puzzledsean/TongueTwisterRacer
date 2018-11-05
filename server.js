@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "/";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 3);
+/******/ 	return __webpack_require__(__webpack_require__.s = 4);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -86,27 +86,27 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _Home = __webpack_require__(9);
+var _Home = __webpack_require__(10);
 
 var _Home2 = _interopRequireDefault(_Home);
 
-var _Join = __webpack_require__(10);
+var _Join = __webpack_require__(11);
 
 var _Join2 = _interopRequireDefault(_Join);
 
-var _Create = __webpack_require__(11);
+var _Create = __webpack_require__(12);
 
 var _Create2 = _interopRequireDefault(_Create);
 
-var _Lobby = __webpack_require__(12);
+var _Lobby = __webpack_require__(13);
 
 var _Lobby2 = _interopRequireDefault(_Lobby);
 
-var _Grid = __webpack_require__(14);
+var _Grid = __webpack_require__(15);
 
 var _Grid2 = _interopRequireDefault(_Grid);
 
-var _api = __webpack_require__(15);
+var _api = __webpack_require__(16);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -138,16 +138,22 @@ exports.default = routes;
 
 /***/ }),
 /* 3 */
+/***/ (function(module, exports) {
+
+module.exports = require("styled-components");
+
+/***/ }),
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _express = __webpack_require__(4);
+var _express = __webpack_require__(5);
 
 var _express2 = _interopRequireDefault(_express);
 
-var _cors = __webpack_require__(5);
+var _cors = __webpack_require__(6);
 
 var _cors2 = _interopRequireDefault(_cors);
 
@@ -155,15 +161,15 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _server = __webpack_require__(6);
+var _server = __webpack_require__(7);
 
 var _reactRouterDom = __webpack_require__(1);
 
-var _serializeJavascript = __webpack_require__(7);
+var _serializeJavascript = __webpack_require__(8);
 
 var _serializeJavascript2 = _interopRequireDefault(_serializeJavascript);
 
-var _App = __webpack_require__(8);
+var _App = __webpack_require__(9);
 
 var _App2 = _interopRequireDefault(_App);
 
@@ -174,8 +180,8 @@ var _routes2 = _interopRequireDefault(_routes);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var app = (0, _express2.default)();
-var http = __webpack_require__(18);
-var socketIo = __webpack_require__(19);
+var http = __webpack_require__(19);
+var socketIo = __webpack_require__(20);
 
 app.use((0, _cors2.default)());
 app.use(_express2.default.static("public"));
@@ -222,31 +228,31 @@ server.listen(3000, function () {
 */
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports) {
 
 module.exports = require("express");
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports) {
 
 module.exports = require("cors");
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports) {
 
 module.exports = require("react-dom/server");
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports) {
 
 module.exports = require("serialize-javascript");
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -270,7 +276,7 @@ var _routes2 = _interopRequireDefault(_routes);
 
 var _reactRouterDom = __webpack_require__(1);
 
-var _NoMatch = __webpack_require__(17);
+var _NoMatch = __webpack_require__(18);
 
 var _NoMatch2 = _interopRequireDefault(_NoMatch);
 
@@ -326,7 +332,7 @@ var App = function (_Component) {
 exports.default = App;
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -335,6 +341,10 @@ exports.default = App;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _templateObject = _taggedTemplateLiteral(['\n  background: palevioletred;\n  border-radius: 3px;\n  border: 2px solid palevioletred;\n  color: white;\n  margin: 0.5em 1em;\n  padding: 0.25em 1em;\n  font-size: 16px;\n'], ['\n  background: palevioletred;\n  border-radius: 3px;\n  border: 2px solid palevioletred;\n  color: white;\n  margin: 0.5em 1em;\n  padding: 0.25em 1em;\n  font-size: 16px;\n']),
+    _templateObject2 = _taggedTemplateLiteral(['\n  text-align: center;\n  font-family: "Arial", sans-serif;\n'], ['\n  text-align: center;\n  font-family: "Arial", sans-serif;\n']);
+
 exports.default = Home;
 
 var _react = __webpack_require__(0);
@@ -343,36 +353,50 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRouterDom = __webpack_require__(1);
 
+var _styledComponents = __webpack_require__(3);
+
+var _styledComponents2 = _interopRequireDefault(_styledComponents);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _taggedTemplateLiteral(strings, raw) { return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
+
+var Button = _styledComponents2.default.button(_templateObject);
+
+var Container = _styledComponents2.default.div(_templateObject2);
 
 function Home() {
   return _react2.default.createElement(
-    'div',
+    Container,
     null,
-    'Tongue Twister Racer',
     _react2.default.createElement(
-      'li',
+      'h1',
       null,
+      'Tongue Twister Racer'
+    ),
+    _react2.default.createElement(
+      _reactRouterDom.Link,
+      { to: '/create' },
       _react2.default.createElement(
-        _reactRouterDom.Link,
-        { to: '/join' },
-        'Join a game'
+        Button,
+        null,
+        'Create a game'
       )
     ),
     _react2.default.createElement(
-      'li',
-      null,
+      _reactRouterDom.Link,
+      { to: '/join' },
       _react2.default.createElement(
-        _reactRouterDom.Link,
-        { to: '/create' },
-        'Create a game'
+        Button,
+        null,
+        'Join a game'
       )
     )
   );
 }
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -384,11 +408,18 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _templateObject = _taggedTemplateLiteral(['\n  background: ', ';\n  color: ', ';\n  border-radius: 3px;\n  border: 2px solid palevioletred;\n  margin: 0.5em 1em;\n  padding: 0.25em 1em;\n  font-size: 16px;\n'], ['\n  background: ', ';\n  color: ', ';\n  border-radius: 3px;\n  border: 2px solid palevioletred;\n  margin: 0.5em 1em;\n  padding: 0.25em 1em;\n  font-size: 16px;\n']),
+    _templateObject2 = _taggedTemplateLiteral(['\n  text-align: center;\n  font-family: "Arial", sans-serif;\n'], ['\n  text-align: center;\n  font-family: "Arial", sans-serif;\n']);
+
 var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
 var _reactRouterDom = __webpack_require__(1);
+
+var _styledComponents = __webpack_require__(3);
+
+var _styledComponents2 = _interopRequireDefault(_styledComponents);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -397,6 +428,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+function _taggedTemplateLiteral(strings, raw) { return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
+
+var Button = _styledComponents2.default.button(_templateObject, function (props) {
+  return props.primary ? "palevioletred" : "white";
+}, function (props) {
+  return props.primary ? "white" : "palevioletred";
+});
+
+var Container = _styledComponents2.default.div(_templateObject2);
 
 var Join = function (_React$Component) {
   _inherits(Join, _React$Component);
@@ -436,20 +477,38 @@ var Join = function (_React$Component) {
     key: 'render',
     value: function render() {
       return _react2.default.createElement(
-        'div',
+        Container,
         null,
-        'Join a game',
-        _react2.default.createElement('br', null),
+        _react2.default.createElement(
+          'h1',
+          null,
+          'Join a game'
+        ),
         'Enter your name',
+        _react2.default.createElement('br', null),
         _react2.default.createElement('input', { type: 'text', onChange: this.handleUserName }),
         _react2.default.createElement('br', null),
         'Enter Lobby to join',
+        _react2.default.createElement('br', null),
         _react2.default.createElement('input', { type: 'text', onChange: this.handleLobbyId }),
         _react2.default.createElement('br', null),
         _react2.default.createElement(
           _reactRouterDom.Link,
+          { to: '/' },
+          _react2.default.createElement(
+            Button,
+            null,
+            'Back'
+          )
+        ),
+        _react2.default.createElement(
+          _reactRouterDom.Link,
           { to: '/lobby/' + this.state.lobbyId },
-          'Join'
+          _react2.default.createElement(
+            Button,
+            { primary: true },
+            'Join'
+          )
         )
       );
     }
@@ -461,7 +520,7 @@ var Join = function (_React$Component) {
 exports.default = Join;
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -473,11 +532,18 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _templateObject = _taggedTemplateLiteral(['\n  background: ', ';\n  color: ', ';\n  border-radius: 3px;\n  border: 2px solid palevioletred;\n  margin: 0.5em 1em;\n  padding: 0.25em 1em;\n  font-size: 16px;\n'], ['\n  background: ', ';\n  color: ', ';\n  border-radius: 3px;\n  border: 2px solid palevioletred;\n  margin: 0.5em 1em;\n  padding: 0.25em 1em;\n  font-size: 16px;\n']),
+    _templateObject2 = _taggedTemplateLiteral(['\n  text-align: center;\n  font-family: "Arial", sans-serif;\n'], ['\n  text-align: center;\n  font-family: "Arial", sans-serif;\n']);
+
 var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
 var _reactRouterDom = __webpack_require__(1);
+
+var _styledComponents = __webpack_require__(3);
+
+var _styledComponents2 = _interopRequireDefault(_styledComponents);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -486,6 +552,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+function _taggedTemplateLiteral(strings, raw) { return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
+
+var Button = _styledComponents2.default.button(_templateObject, function (props) {
+  return props.primary ? "palevioletred" : "white";
+}, function (props) {
+  return props.primary ? "white" : "palevioletred";
+});
+
+var Container = _styledComponents2.default.div(_templateObject2);
 
 var Create = function (_React$Component) {
   _inherits(Create, _React$Component);
@@ -530,17 +606,34 @@ var Create = function (_React$Component) {
     key: 'render',
     value: function render() {
       return _react2.default.createElement(
-        'div',
+        Container,
         null,
-        'Create a game',
-        _react2.default.createElement('br', null),
+        _react2.default.createElement(
+          'h1',
+          null,
+          'Create a game'
+        ),
         'Enter your name',
+        _react2.default.createElement('br', null),
         _react2.default.createElement('input', { type: 'text', name: 'userName', onChange: this.handleUserName }),
         _react2.default.createElement('br', null),
         _react2.default.createElement(
           _reactRouterDom.Link,
+          { to: '/' },
+          _react2.default.createElement(
+            Button,
+            null,
+            'Back'
+          )
+        ),
+        _react2.default.createElement(
+          _reactRouterDom.Link,
           { to: '/lobby/' + this.state.lobbyId },
-          'Create'
+          _react2.default.createElement(
+            Button,
+            { primary: true },
+            'Create'
+          )
         )
       );
     }
@@ -552,7 +645,7 @@ var Create = function (_React$Component) {
 exports.default = Create;
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -564,13 +657,22 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _templateObject = _taggedTemplateLiteral(['\n  background: ', ';\n  color: ', ';\n  border-radius: 3px;\n  border: 2px solid palevioletred;\n  margin: 0.5em 1em;\n  padding: 0.25em 1em;\n  font-size: 16px;\n'], ['\n  background: ', ';\n  color: ', ';\n  border-radius: 3px;\n  border: 2px solid palevioletred;\n  margin: 0.5em 1em;\n  padding: 0.25em 1em;\n  font-size: 16px;\n']),
+    _templateObject2 = _taggedTemplateLiteral(['\n  text-align: center;\n  font-family: "Arial", sans-serif;\n'], ['\n  text-align: center;\n  font-family: "Arial", sans-serif;\n']);
+
 var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _socket = __webpack_require__(13);
+var _socket = __webpack_require__(14);
 
 var _socket2 = _interopRequireDefault(_socket);
+
+var _reactRouterDom = __webpack_require__(1);
+
+var _styledComponents = __webpack_require__(3);
+
+var _styledComponents2 = _interopRequireDefault(_styledComponents);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -579,6 +681,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+function _taggedTemplateLiteral(strings, raw) { return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
+
+var Button = _styledComponents2.default.button(_templateObject, function (props) {
+  return props.primary ? "palevioletred" : "white";
+}, function (props) {
+  return props.primary ? "white" : "palevioletred";
+});
+
+var Container = _styledComponents2.default.div(_templateObject2);
 
 var SERVER_ENDPOINT = "http://127.0.0.1:3000";
 
@@ -597,20 +709,48 @@ var Lobby = function (_React$Component) {
   }
 
   _createClass(Lobby, [{
-    key: "componentDidMount",
+    key: 'componentDidMount',
     value: function componentDidMount() {
       var socket = (0, _socket2.default)(SERVER_ENDPOINT);
     }
   }, {
-    key: "render",
+    key: 'render',
     value: function render() {
       return _react2.default.createElement(
-        "div",
+        Container,
         null,
-        "Share the code with a friend ",
-        _react2.default.createElement("br", null),
-        "Lobby code is ",
-        this.state.lobbyId
+        _react2.default.createElement(
+          'h1',
+          null,
+          'Lobby'
+        ),
+        'Share the code with a friend',
+        _react2.default.createElement('br', null),
+        'Lobby code is ',
+        _react2.default.createElement(
+          'b',
+          null,
+          this.state.lobbyId
+        ),
+        _react2.default.createElement('br', null),
+        _react2.default.createElement(
+          _reactRouterDom.Link,
+          { to: '/' },
+          _react2.default.createElement(
+            Button,
+            null,
+            'Leave Game'
+          )
+        ),
+        _react2.default.createElement(
+          _reactRouterDom.Link,
+          { to: '/game/' + this.state.lobbyId },
+          _react2.default.createElement(
+            Button,
+            { primary: true },
+            'Start Game'
+          )
+        )
       );
     }
   }]);
@@ -621,13 +761,13 @@ var Lobby = function (_React$Component) {
 exports.default = Lobby;
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports) {
 
 module.exports = require("socket.io-client");
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -774,7 +914,7 @@ var Grid = function (_Component) {
 exports.default = Grid;
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -785,7 +925,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.fetchPopularRepos = fetchPopularRepos;
 
-var _isomorphicFetch = __webpack_require__(16);
+var _isomorphicFetch = __webpack_require__(17);
 
 var _isomorphicFetch2 = _interopRequireDefault(_isomorphicFetch);
 
@@ -807,13 +947,13 @@ function fetchPopularRepos() {
 }
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports) {
 
 module.exports = require("isomorphic-fetch");
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -834,18 +974,18 @@ function NoMatch() {
   return _react2.default.createElement(
     'div',
     null,
-    'Four Oh Four'
+    '404 page not found'
   );
 }
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports) {
 
 module.exports = require("http");
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports) {
 
 module.exports = require("socket.io");

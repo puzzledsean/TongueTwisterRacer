@@ -1,5 +1,21 @@
 import React from 'react';
 import { Link } from 'react-router-dom'
+import styled from 'styled-components'
+
+const Button = styled.button`
+  background: ${props => props.primary ? "palevioletred" : "white"};
+  color: ${props => props.primary ? "white" : "palevioletred"};
+  border-radius: 3px;
+  border: 2px solid palevioletred;
+  margin: 0.5em 1em;
+  padding: 0.25em 1em;
+  font-size: 16px;
+`;
+
+const Container = styled.div`
+  text-align: center;
+  font-family: "Arial", sans-serif;
+`
 
 class Join extends React.Component {
   constructor(props) {
@@ -28,22 +44,32 @@ class Join extends React.Component {
 
   render() {
     return (
-      <div>
+      <Container>
+          <h1>
           Join a game
+          </h1>
 
+          Enter your name 
           <br/>
-          Enter your name
           <input type="text" onChange={this.handleUserName}></input>
 
           <br/>
           Enter Lobby to join
+          <br/>
           <input type="text" onChange={this.handleLobbyId}></input>
 
           <br/>
-          <Link to={'/lobby/' + this.state.lobbyId}>
-          Join 
+          <Link to={'/'}>
+            <Button>
+              Back 
+            </Button>
           </Link>
-      </div>
+          <Link to={'/lobby/' + this.state.lobbyId}>
+            <Button primary>
+              Join 
+            </Button>
+          </Link>
+      </Container>
     );
   }
 }
