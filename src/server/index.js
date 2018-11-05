@@ -8,9 +8,19 @@ import App from '../shared/App'
 import routes from '../shared/routes'
 
 const app = express()
+const http = require("http");
+const socketIo = require("socket.io");
 
 app.use(cors())
 app.use(express.static("public"))
+
+// Define socket.io connection
+const server = http.createServer(app);
+const io = socketIo(server);
+io.on("connection", socket => {
+  console.log("New client connected")
+  socket.on("disconnect", () => console.log("Client disconnected"));
+});
 
 app.get("*", (req, res, next) => {
   const activeRoute = routes.find((route) => matchPath(req.url, route)) || {}
@@ -45,7 +55,7 @@ app.get("*", (req, res, next) => {
   }).catch(next)
 })
 
-app.listen(3000, () => {
+server.listen(3000, () => {
   console.log(`Server is listening on port: 3000`)
 })
 

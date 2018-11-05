@@ -90,11 +90,23 @@ var _Home = __webpack_require__(9);
 
 var _Home2 = _interopRequireDefault(_Home);
 
-var _Grid = __webpack_require__(10);
+var _Join = __webpack_require__(10);
+
+var _Join2 = _interopRequireDefault(_Join);
+
+var _Create = __webpack_require__(11);
+
+var _Create2 = _interopRequireDefault(_Create);
+
+var _Lobby = __webpack_require__(12);
+
+var _Lobby2 = _interopRequireDefault(_Lobby);
+
+var _Grid = __webpack_require__(14);
 
 var _Grid2 = _interopRequireDefault(_Grid);
 
-var _api = __webpack_require__(11);
+var _api = __webpack_require__(15);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -102,6 +114,17 @@ var routes = [{
   path: '/',
   exact: true,
   component: _Home2.default
+}, {
+  path: '/join',
+  exact: true,
+  component: _Join2.default
+}, {
+  path: '/create',
+  exact: true,
+  component: _Create2.default
+}, {
+  path: '/lobby/:id',
+  component: _Lobby2.default
 }, {
   path: '/popular/:id',
   component: _Grid2.default,
@@ -151,9 +174,21 @@ var _routes2 = _interopRequireDefault(_routes);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var app = (0, _express2.default)();
+var http = __webpack_require__(18);
+var socketIo = __webpack_require__(19);
 
 app.use((0, _cors2.default)());
 app.use(_express2.default.static("public"));
+
+// Define socket.io connection
+var server = http.createServer(app);
+var io = socketIo(server);
+io.on("connection", function (socket) {
+  console.log("New client connected");
+  socket.on("disconnect", function () {
+    return console.log("Client disconnected");
+  });
+});
 
 app.get("*", function (req, res, next) {
   var activeRoute = _routes2.default.find(function (route) {
@@ -175,7 +210,7 @@ app.get("*", function (req, res, next) {
   }).catch(next);
 });
 
-app.listen(3000, function () {
+server.listen(3000, function () {
   console.log("Server is listening on port: 3000");
 });
 
@@ -235,11 +270,7 @@ var _routes2 = _interopRequireDefault(_routes);
 
 var _reactRouterDom = __webpack_require__(1);
 
-var _Navbar = __webpack_require__(13);
-
-var _Navbar2 = _interopRequireDefault(_Navbar);
-
-var _NoMatch = __webpack_require__(14);
+var _NoMatch = __webpack_require__(17);
 
 var _NoMatch2 = _interopRequireDefault(_NoMatch);
 
@@ -268,7 +299,6 @@ var App = function (_Component) {
       return _react2.default.createElement(
         'div',
         null,
-        _react2.default.createElement(_Navbar2.default, null),
         _react2.default.createElement(
           _reactRouterDom.Switch,
           null,
@@ -311,18 +341,293 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
+var _reactRouterDom = __webpack_require__(1);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function Home() {
   return _react2.default.createElement(
     'div',
     null,
-    'Select a Language'
+    'Tongue Twister Racer',
+    _react2.default.createElement(
+      'li',
+      null,
+      _react2.default.createElement(
+        _reactRouterDom.Link,
+        { to: '/join' },
+        'Join a game'
+      )
+    ),
+    _react2.default.createElement(
+      'li',
+      null,
+      _react2.default.createElement(
+        _reactRouterDom.Link,
+        { to: '/create' },
+        'Create a game'
+      )
+    )
   );
 }
 
 /***/ }),
 /* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactRouterDom = __webpack_require__(1);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Join = function (_React$Component) {
+  _inherits(Join, _React$Component);
+
+  function Join(props) {
+    _classCallCheck(this, Join);
+
+    var _this = _possibleConstructorReturn(this, (Join.__proto__ || Object.getPrototypeOf(Join)).call(this, props));
+
+    _this.state = {
+      lobbyId: NaN,
+      userName: NaN
+    };
+
+    _this.handleUserName = _this.handleUserName.bind(_this);
+    _this.handleLobbyId = _this.handleLobbyId.bind(_this);
+    return _this;
+  }
+
+  _createClass(Join, [{
+    key: 'handleUserName',
+    value: function handleUserName(event) {
+      this.setState({ userName: event.target.value });
+    }
+  }, {
+    key: 'handleLobbyId',
+    value: function handleLobbyId(event) {
+      this.setState({ lobbyId: event.target.value });
+    }
+  }, {
+    key: 'genLobbyID',
+    value: function genLobbyID() {
+      // Credit: https://gist.github.com/gordonbrander/2230317
+      return Math.random().toString(36).substr(2, 6);
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      return _react2.default.createElement(
+        'div',
+        null,
+        'Join a game',
+        _react2.default.createElement('br', null),
+        'Enter your name',
+        _react2.default.createElement('input', { type: 'text', onChange: this.handleUserName }),
+        _react2.default.createElement('br', null),
+        'Enter Lobby to join',
+        _react2.default.createElement('input', { type: 'text', onChange: this.handleLobbyId }),
+        _react2.default.createElement('br', null),
+        _react2.default.createElement(
+          _reactRouterDom.Link,
+          { to: '/lobby/' + this.state.lobbyId },
+          'Join'
+        )
+      );
+    }
+  }]);
+
+  return Join;
+}(_react2.default.Component);
+
+exports.default = Join;
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactRouterDom = __webpack_require__(1);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Create = function (_React$Component) {
+  _inherits(Create, _React$Component);
+
+  function Create(props) {
+    _classCallCheck(this, Create);
+
+    var _this = _possibleConstructorReturn(this, (Create.__proto__ || Object.getPrototypeOf(Create)).call(this, props));
+
+    _this.state = {
+      lobbyId: NaN,
+      userName: NaN
+    };
+
+    _this.handleUserName = _this.handleUserName.bind(_this);
+    return _this;
+  }
+
+  _createClass(Create, [{
+    key: 'componentDidMount',
+    value: function componentDidMount() {
+      var _this2 = this;
+
+      this.setState(function () {
+        return {
+          lobbyId: _this2.genLobbyID()
+        };
+      });
+    }
+  }, {
+    key: 'handleUserName',
+    value: function handleUserName(event) {
+      this.setState({ userName: event.target.value });
+    }
+  }, {
+    key: 'genLobbyID',
+    value: function genLobbyID() {
+      // Credit: https://gist.github.com/gordonbrander/2230317
+      return Math.random().toString(36).substr(2, 6);
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      return _react2.default.createElement(
+        'div',
+        null,
+        'Create a game',
+        _react2.default.createElement('br', null),
+        'Enter your name',
+        _react2.default.createElement('input', { type: 'text', name: 'userName', onChange: this.handleUserName }),
+        _react2.default.createElement('br', null),
+        _react2.default.createElement(
+          _reactRouterDom.Link,
+          { to: '/lobby/' + this.state.lobbyId },
+          'Create'
+        )
+      );
+    }
+  }]);
+
+  return Create;
+}(_react2.default.Component);
+
+exports.default = Create;
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _socket = __webpack_require__(13);
+
+var _socket2 = _interopRequireDefault(_socket);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var SERVER_ENDPOINT = "http://127.0.0.1:3000";
+
+var Lobby = function (_React$Component) {
+  _inherits(Lobby, _React$Component);
+
+  function Lobby(props) {
+    _classCallCheck(this, Lobby);
+
+    var _this = _possibleConstructorReturn(this, (Lobby.__proto__ || Object.getPrototypeOf(Lobby)).call(this, props));
+
+    _this.state = {
+      lobbyId: _this.props.match.params.id
+    };
+    return _this;
+  }
+
+  _createClass(Lobby, [{
+    key: "componentDidMount",
+    value: function componentDidMount() {
+      var socket = (0, _socket2.default)(SERVER_ENDPOINT);
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return _react2.default.createElement(
+        "div",
+        null,
+        "Share the code with a friend ",
+        _react2.default.createElement("br", null),
+        "Lobby code is ",
+        this.state.lobbyId
+      );
+    }
+  }]);
+
+  return Lobby;
+}(_react2.default.Component);
+
+exports.default = Lobby;
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports) {
+
+module.exports = require("socket.io-client");
+
+/***/ }),
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -469,7 +774,7 @@ var Grid = function (_Component) {
 exports.default = Grid;
 
 /***/ }),
-/* 11 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -480,7 +785,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.fetchPopularRepos = fetchPopularRepos;
 
-var _isomorphicFetch = __webpack_require__(12);
+var _isomorphicFetch = __webpack_require__(16);
 
 var _isomorphicFetch2 = _interopRequireDefault(_isomorphicFetch);
 
@@ -502,70 +807,13 @@ function fetchPopularRepos() {
 }
 
 /***/ }),
-/* 12 */
+/* 16 */
 /***/ (function(module, exports) {
 
 module.exports = require("isomorphic-fetch");
 
 /***/ }),
-/* 13 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = Navbar;
-
-var _react = __webpack_require__(0);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _reactRouterDom = __webpack_require__(1);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function Navbar() {
-  var languages = [{
-    name: 'All',
-    param: 'all'
-  }, {
-    name: 'JavaScript',
-    param: 'javascript'
-  }, {
-    name: 'Ruby',
-    param: 'ruby'
-  }, {
-    name: 'Python',
-    param: 'python'
-  }, {
-    name: 'Java',
-    param: 'java'
-  }];
-
-  return _react2.default.createElement(
-    'ul',
-    null,
-    languages.map(function (_ref) {
-      var name = _ref.name,
-          param = _ref.param;
-      return _react2.default.createElement(
-        'li',
-        { key: param },
-        _react2.default.createElement(
-          _reactRouterDom.NavLink,
-          { activeStyle: { fontWeight: 'bold' }, to: '/popular/' + param },
-          name
-        )
-      );
-    })
-  );
-}
-
-/***/ }),
-/* 14 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -589,6 +837,18 @@ function NoMatch() {
     'Four Oh Four'
   );
 }
+
+/***/ }),
+/* 18 */
+/***/ (function(module, exports) {
+
+module.exports = require("http");
+
+/***/ }),
+/* 19 */
+/***/ (function(module, exports) {
+
+module.exports = require("socket.io");
 
 /***/ })
 /******/ ]);
