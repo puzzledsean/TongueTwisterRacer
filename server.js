@@ -555,9 +555,8 @@ var Join = function (_React$Component) {
   }, {
     key: 'handleCurrentPlayer',
     value: function handleCurrentPlayer(event) {
-      var UID = this.genUID();
       this.setState({
-        currentPlayer: new _Player.Player(event.target.value, 0, UID)
+        currentPlayer: new _Player.Player(event.target.value, 0)
       });
     }
   }, {
@@ -566,15 +565,6 @@ var Join = function (_React$Component) {
       this.setState({
         lobbyId: event.target.value
       });
-    }
-  }, {
-    key: 'genUID',
-    value: function genUID() {
-      // Credit: https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
-      function s4() {
-        return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
-      }
-      return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
     }
   }, {
     key: 'render',
@@ -703,9 +693,8 @@ var Create = function (_React$Component) {
   }, {
     key: 'handleCurrentPlayer',
     value: function handleCurrentPlayer(event) {
-      var UID = this.genUID();
       this.setState({
-        currentPlayer: new _Player.Player(event.target.value, 0, UID)
+        currentPlayer: new _Player.Player(event.target.value, 0)
       });
     }
   }, {
@@ -713,15 +702,6 @@ var Create = function (_React$Component) {
     value: function genLobbyID() {
       // Credit: https://gist.github.com/gordonbrander/2230317
       return Math.random().toString(36).substr(2, 6);
-    }
-  }, {
-    key: 'genUID',
-    value: function genUID() {
-      // Credit: https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
-      function s4() {
-        return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
-      }
-      return s4() + s4() + '-' + s4();
     }
   }, {
     key: 'render',
@@ -1008,7 +988,7 @@ module.exports = require("socket.io-client");
 
 
 Object.defineProperty(exports, "__esModule", {
-    value: true
+  value: true
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -1028,6 +1008,10 @@ var _styledComponents = __webpack_require__(2);
 
 var _styledComponents2 = _interopRequireDefault(_styledComponents);
 
+var _socket = __webpack_require__(16);
+
+var _socket2 = _interopRequireDefault(_socket);
+
 var _Player = __webpack_require__(3);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -1045,124 +1029,184 @@ var Button = _styledComponents2.default.button(_templateObject);
 var Container = _styledComponents2.default.div(_templateObject2);
 
 var options = {
-    autoStart: false
+  autoStart: false
 };
 
+var SERVER_ENDPOINT = "http://127.0.0.1:3000";
+// Establish a socket connection
+var socket = (0, _socket2.default)(SERVER_ENDPOINT);
+
 var Game = function (_React$Component) {
-    _inherits(Game, _React$Component);
+  _inherits(Game, _React$Component);
 
-    function Game(props) {
-        _classCallCheck(this, Game);
+  function Game(props) {
+    _classCallCheck(this, Game);
 
-        var _this = _possibleConstructorReturn(this, (Game.__proto__ || Object.getPrototypeOf(Game)).call(this, props));
+    var _this = _possibleConstructorReturn(this, (Game.__proto__ || Object.getPrototypeOf(Game)).call(this, props));
 
-        _this.state = {
-            lobbyId: _this.props.match.params.id,
-            players: []
-        };
-        return _this;
+    _this.state = {
+      lobbyId: _this.props.match.params.id,
+      players: []
+    };
+    _this.updateScore = _this.updateScore.bind(_this);
+    return _this;
+  }
+
+  _createClass(Game, [{
+    key: 'componentDidMount',
+    value: function componentDidMount() {
+      var passedState = this.props.location.state;
+
+      // Update the local lobby with this user.
+      this.setState({
+        players: passedState.players
+      });
     }
+  }, {
+    key: 'levenshtein',
+    value: function levenshtein(a, b) {
+      // Credit: https://gist.github.com/andrei-m/982927
+      if (a.length == 0) return b.length;
+      if (b.length == 0) return a.length;
 
-    _createClass(Game, [{
-        key: 'componentDidMount',
-        value: function componentDidMount() {
-            var passedState = this.props.location.state;
+      var matrix = [];
 
-            // Update the local lobby with this user.
-            this.setState({
-                players: passedState.players
-            });
+      // increment along the first column of each row
+      var i;
+      for (i = 0; i <= b.length; i++) {
+        matrix[i] = [i];
+      }
+
+      // increment each column in the first row
+      var j;
+      for (j = 0; j <= a.length; j++) {
+        matrix[0][j] = j;
+      }
+
+      // Fill in the rest of the matrix
+      for (i = 1; i <= b.length; i++) {
+        for (j = 1; j <= a.length; j++) {
+          if (b.charAt(i - 1) == a.charAt(j - 1)) {
+            matrix[i][j] = matrix[i - 1][j - 1];
+          } else {
+            matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, // substitution
+            Math.min(matrix[i][j - 1] + 1, // insertion
+            matrix[i - 1][j] + 1)); // deletion
+          }
         }
-    }, {
-        key: 'render',
-        value: function render() {
-            var _props = this.props,
-                transcript = _props.transcript,
-                resetTranscript = _props.resetTranscript,
-                browserSupportsSpeechRecognition = _props.browserSupportsSpeechRecognition,
-                startListening = _props.startListening,
-                stopListening = _props.stopListening;
+      }
+
+      return matrix[b.length][a.length];
+    }
+  }, {
+    key: 'updateScore',
+    value: function updateScore(userResponse, currentTT) {
+      var userResponseStripped = userResponse.split(' ').join('');
+      var currentTTStripped = currentTT.split(' ').join('');
+
+      var levenshteinScore = this.levenshtein(userResponseStripped, currentTTStripped);
+
+      // Low levenshtein score means user got a really good score (inverse relationship). 
+      var score = currentTTStripped.length - levenshteinScore;
+
+      alert('Your score: ' + score);
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _this2 = this;
+
+      var _props = this.props,
+          transcript = _props.transcript,
+          resetTranscript = _props.resetTranscript,
+          browserSupportsSpeechRecognition = _props.browserSupportsSpeechRecognition,
+          startListening = _props.startListening,
+          stopListening = _props.stopListening;
 
 
-            if (!browserSupportsSpeechRecognition) {
-                return null;
-            }
-            var userList = this.state.players.map(function (player) {
-                return _react2.default.createElement(
-                    'li',
-                    { key: player.username },
-                    player.username,
-                    ': 0'
-                );
-            });
+      if (!browserSupportsSpeechRecognition) {
+        return null;
+      }
+      var userList = this.state.players.map(function (player) {
+        return _react2.default.createElement(
+          'li',
+          { key: player.username },
+          player.username,
+          ': 0'
+        );
+      });
 
-            var userResponse = void 0;
-            if (transcript) {
-                userResponse = _react2.default.createElement(
-                    'div',
-                    null,
-                    transcript
-                );
-            } else {
-                userResponse = _react2.default.createElement(
-                    'div',
-                    null,
-                    '...'
-                );
-            }
+      var userResponse = void 0;
+      if (transcript) {
+        userResponse = _react2.default.createElement(
+          'div',
+          null,
+          transcript
+        );
+      } else {
+        userResponse = _react2.default.createElement(
+          'div',
+          null,
+          '...'
+        );
+      }
 
-            return _react2.default.createElement(
-                Container,
-                null,
-                _react2.default.createElement(
-                    'h1',
-                    null,
-                    'Tongue Twister Racer'
-                ),
-                _react2.default.createElement(
-                    'h2',
-                    null,
-                    'Scoreboard'
-                ),
-                _react2.default.createElement(
-                    'h4',
-                    null,
-                    'First to 50 points wins!'
-                ),
-                userList,
-                _react2.default.createElement('br', null),
-                _react2.default.createElement(
-                    'h3',
-                    null,
-                    'Prompt'
-                ),
-                'She sells seashells by the seashore.',
-                _react2.default.createElement(
-                    'h3',
-                    null,
-                    'Your response'
-                ),
-                userResponse,
-                _react2.default.createElement('br', null),
-                _react2.default.createElement(
-                    Button,
-                    { onClick: function onClick() {
-                            resetTranscript();startListening();
-                        } },
-                    'Record'
-                ),
-                _react2.default.createElement('br', null),
-                _react2.default.createElement(
-                    Button,
-                    { onClick: stopListening },
-                    'Stop Recording and Submit'
-                ),
-                _react2.default.createElement('br', null)
-            );
-        }
-    }]);
+      var currentTT = 'She sells seashells by the seashore';
 
-    return Game;
+      return _react2.default.createElement(
+        Container,
+        null,
+        _react2.default.createElement(
+          'h1',
+          null,
+          'Tongue Twister Racer'
+        ),
+        _react2.default.createElement(
+          'h2',
+          null,
+          'Scoreboard'
+        ),
+        _react2.default.createElement(
+          'h4',
+          null,
+          'First to 50 points wins!'
+        ),
+        userList,
+        _react2.default.createElement('br', null),
+        _react2.default.createElement(
+          'h3',
+          null,
+          'Prompt'
+        ),
+        currentTT,
+        _react2.default.createElement(
+          'h3',
+          null,
+          'Your response'
+        ),
+        userResponse,
+        _react2.default.createElement('br', null),
+        _react2.default.createElement(
+          Button,
+          { onClick: function onClick() {
+              resetTranscript();startListening();
+            } },
+          'Record'
+        ),
+        _react2.default.createElement('br', null),
+        _react2.default.createElement(
+          Button,
+          { onClick: function onClick() {
+              stopListening();_this2.updateScore(transcript, currentTT);resetTranscript();
+            } },
+          'Stop Recording and Submit'
+        ),
+        _react2.default.createElement('br', null)
+      );
+    }
+  }]);
+
+  return Game;
 }(_react2.default.Component);
 
 exports.default = (0, _reactSpeechRecognition2.default)(options)(Game);
