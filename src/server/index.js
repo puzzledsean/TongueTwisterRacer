@@ -20,7 +20,6 @@ mongoose
     .catch(err => console.log(err));
 
 app.use(cors())
-app.use(express.json());
 app.use(express.static("public"))
 app.use(express.json());
 
@@ -37,6 +36,10 @@ io.on("connection", socket => {
   // Handle when a user joins/updates the lobby.
   socket.on('lobbyUpdateToServer', function(data) {
     io.emit('lobbyUpdateToClient', data)
+  })
+
+  socket.on('startGame', () => {
+    io.emit('startGameToClient')
   })
 });
 

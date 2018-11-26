@@ -2,6 +2,7 @@ import Home from './Home'
 import Join from './Join'
 import Create from './Create'
 import Lobby from './Lobby'
+import Game from './Game'
 import Grid from './Grid'
 import { fetchPopularRepos } from './api'
 
@@ -24,6 +25,10 @@ const routes =  [
   {
     path: '/lobby/:id',
     component: Lobby,
+  },
+  {
+    path: '/game/:id',
+    component: Game,
   },
   {
     path: '/popular/:id',

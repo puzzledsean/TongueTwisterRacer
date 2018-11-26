@@ -108,11 +108,15 @@ var _Lobby = __webpack_require__(14);
 
 var _Lobby2 = _interopRequireDefault(_Lobby);
 
-var _Grid = __webpack_require__(16);
+var _Game = __webpack_require__(16);
+
+var _Game2 = _interopRequireDefault(_Game);
+
+var _Grid = __webpack_require__(18);
 
 var _Grid2 = _interopRequireDefault(_Grid);
 
-var _api = __webpack_require__(17);
+var _api = __webpack_require__(19);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -131,6 +135,9 @@ var routes = [{
 }, {
   path: '/lobby/:id',
   component: _Lobby2.default
+}, {
+  path: '/game/:id',
+  component: _Game2.default
 }, {
   path: '/popular/:id',
   component: _Grid2.default,
@@ -186,9 +193,9 @@ var _routes2 = _interopRequireDefault(_routes);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var app = (0, _express2.default)();
-var http = __webpack_require__(20);
-var socketIo = __webpack_require__(21);
-var db = __webpack_require__(22)['mongoURI'];
+var http = __webpack_require__(22);
+var socketIo = __webpack_require__(23);
+var db = __webpack_require__(24)['mongoURI'];
 
 // Set up database to MLab
 var mongoose = __webpack_require__(4);
@@ -199,7 +206,6 @@ mongoose.connect(db).then(function () {
 });
 
 app.use((0, _cors2.default)());
-app.use(_express2.default.json());
 app.use(_express2.default.static("public"));
 app.use(_express2.default.json());
 
@@ -219,9 +225,13 @@ io.on("connection", function (socket) {
   socket.on('lobbyUpdateToServer', function (data) {
     io.emit('lobbyUpdateToClient', data);
   });
+
+  socket.on('startGame', function () {
+    io.emit('startGameToClient');
+  });
 });
 
-var game = __webpack_require__(23);
+var game = __webpack_require__(25);
 
 // Creates a lobby in MongoDB.
 app.post("/api/createLobby", game.create);
@@ -309,7 +319,7 @@ var _routes2 = _interopRequireDefault(_routes);
 
 var _reactRouterDom = __webpack_require__(1);
 
-var _NoMatch = __webpack_require__(19);
+var _NoMatch = __webpack_require__(21);
 
 var _NoMatch2 = _interopRequireDefault(_NoMatch);
 
@@ -795,6 +805,24 @@ var Lobby = function (_React$Component) {
           userNames: data.userNames
         });
       });
+
+      // Redirect to the game if someone started. 
+      socket.on('startGameToClient', function () {
+        _this2.props.history.push({
+          pathname: '/game/' + _this2.state.lobbyId,
+          state: _this2.state
+        });
+      });
+    }
+  }, {
+    key: 'startGame',
+    value: function startGame() {
+      socket.emit('startGame', {});
+    }
+  }, {
+    key: 'leaveGame',
+    value: function leaveGame() {
+      socket.emit('leaveGame', {});
     }
   }, {
     key: 'render',
@@ -836,16 +864,19 @@ var Lobby = function (_React$Component) {
           { to: '/' },
           _react2.default.createElement(
             Button,
-            null,
+            { onClick: this.leaveGame },
             'Leave Game'
           )
         ),
         _react2.default.createElement(
           _reactRouterDom.Link,
-          { to: '/game/' + this.state.lobbyId },
+          { to: {
+              pathname: '/game/' + this.state.lobbyId,
+              state: this.state
+            } },
           _react2.default.createElement(
             Button,
-            { primary: true },
+            { primary: true, onClick: this.startGame },
             'Start Game'
           )
         )
@@ -866,6 +897,179 @@ module.exports = require("socket.io-client");
 
 /***/ }),
 /* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _templateObject = _taggedTemplateLiteral(['\n  background: palevioletred;\n  border-radius: 3px;\n  border: 2px solid palevioletred;\n  color: white;\n  margin: 0.5em 1em;\n  padding: 0.25em 1em;\n  font-size: 16px;\n'], ['\n  background: palevioletred;\n  border-radius: 3px;\n  border: 2px solid palevioletred;\n  color: white;\n  margin: 0.5em 1em;\n  padding: 0.25em 1em;\n  font-size: 16px;\n']),
+    _templateObject2 = _taggedTemplateLiteral(['\n  text-align: center;\n  font-family: "Arial", sans-serif;\n'], ['\n  text-align: center;\n  font-family: "Arial", sans-serif;\n']);
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactSpeechRecognition = __webpack_require__(17);
+
+var _reactSpeechRecognition2 = _interopRequireDefault(_reactSpeechRecognition);
+
+var _styledComponents = __webpack_require__(2);
+
+var _styledComponents2 = _interopRequireDefault(_styledComponents);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+function _taggedTemplateLiteral(strings, raw) { return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
+
+var Button = _styledComponents2.default.button(_templateObject);
+
+var Container = _styledComponents2.default.div(_templateObject2);
+
+var options = {
+    autoStart: false
+};
+
+var Game = function (_React$Component) {
+    _inherits(Game, _React$Component);
+
+    function Game(props) {
+        _classCallCheck(this, Game);
+
+        var _this = _possibleConstructorReturn(this, (Game.__proto__ || Object.getPrototypeOf(Game)).call(this, props));
+
+        _this.state = {
+            lobbyId: _this.props.match.params.id,
+            userNames: [],
+            userScores: [0, 0], // in order for a game to start, it can only have two players.
+            isCreator: false
+        };
+        return _this;
+    }
+
+    _createClass(Game, [{
+        key: 'componentDidMount',
+        value: function componentDidMount() {
+            var passedState = this.props.location.state;
+
+            // Update the local lobby with this user.
+            this.setState({
+                userNames: passedState.userNames
+            });
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var _props = this.props,
+                transcript = _props.transcript,
+                resetTranscript = _props.resetTranscript,
+                browserSupportsSpeechRecognition = _props.browserSupportsSpeechRecognition,
+                startListening = _props.startListening,
+                stopListening = _props.stopListening;
+
+
+            if (!browserSupportsSpeechRecognition) {
+                return null;
+            }
+            var userList = this.state.userNames.map(function (userName) {
+                return _react2.default.createElement(
+                    'li',
+                    { key: userName },
+                    userName,
+                    ': 0'
+                );
+            });
+
+            var userResponse = void 0;
+            if (transcript) {
+                userResponse = _react2.default.createElement(
+                    'div',
+                    null,
+                    transcript
+                );
+            } else {
+                userResponse = _react2.default.createElement(
+                    'div',
+                    null,
+                    '...'
+                );
+            }
+
+            return _react2.default.createElement(
+                Container,
+                null,
+                _react2.default.createElement(
+                    'h1',
+                    null,
+                    'Tongue Twister Racer'
+                ),
+                _react2.default.createElement(
+                    'h2',
+                    null,
+                    'Scoreboard'
+                ),
+                _react2.default.createElement(
+                    'h4',
+                    null,
+                    'First to 50 points wins!'
+                ),
+                userList,
+                _react2.default.createElement('br', null),
+                _react2.default.createElement(
+                    'h3',
+                    null,
+                    'Prompt'
+                ),
+                'She sells seashells by the seashore.',
+                _react2.default.createElement(
+                    'h3',
+                    null,
+                    'Your response'
+                ),
+                userResponse,
+                _react2.default.createElement('br', null),
+                _react2.default.createElement(
+                    Button,
+                    { onClick: function onClick() {
+                            resetTranscript();startListening();
+                        } },
+                    'Record'
+                ),
+                _react2.default.createElement('br', null),
+                _react2.default.createElement(
+                    Button,
+                    { onClick: stopListening },
+                    'Stop Recording and Submit'
+                ),
+                _react2.default.createElement('br', null)
+            );
+        }
+    }]);
+
+    return Game;
+}(_react2.default.Component);
+
+exports.default = (0, _reactSpeechRecognition2.default)(options)(Game);
+
+/***/ }),
+/* 17 */
+/***/ (function(module, exports) {
+
+module.exports = require("react-speech-recognition");
+
+/***/ }),
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1012,7 +1216,7 @@ var Grid = function (_Component) {
 exports.default = Grid;
 
 /***/ }),
-/* 17 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1023,7 +1227,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.fetchPopularRepos = fetchPopularRepos;
 
-var _isomorphicFetch = __webpack_require__(18);
+var _isomorphicFetch = __webpack_require__(20);
 
 var _isomorphicFetch2 = _interopRequireDefault(_isomorphicFetch);
 
@@ -1045,13 +1249,13 @@ function fetchPopularRepos() {
 }
 
 /***/ }),
-/* 18 */
+/* 20 */
 /***/ (function(module, exports) {
 
 module.exports = require("isomorphic-fetch");
 
 /***/ }),
-/* 19 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1077,31 +1281,31 @@ function NoMatch() {
 }
 
 /***/ }),
-/* 20 */
+/* 22 */
 /***/ (function(module, exports) {
 
 module.exports = require("http");
 
 /***/ }),
-/* 21 */
+/* 23 */
 /***/ (function(module, exports) {
 
 module.exports = require("socket.io");
 
 /***/ }),
-/* 22 */
+/* 24 */
 /***/ (function(module, exports) {
 
 module.exports = {"mongoURI":"mongodb://root:root123@ds231133.mlab.com:31133/tonguetwisterracer"}
 
 /***/ }),
-/* 23 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Game = __webpack_require__(24);
+var Game = __webpack_require__(26);
 
 // Create and Save a new Game 
 exports.create = function (req, res) {
@@ -1143,7 +1347,7 @@ exports.update = function (req, res) {
 };
 
 /***/ }),
-/* 24 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

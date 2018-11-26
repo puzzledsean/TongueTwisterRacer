@@ -76,6 +76,22 @@ class Lobby extends React.Component {
         userNames: data.userNames,
       })
     })
+
+    // Redirect to the game if someone started. 
+    socket.on('startGameToClient', () => {
+      this.props.history.push({
+        pathname: '/game/' + this.state.lobbyId,
+        state: this.state,
+      })
+    })
+  }
+
+  startGame() {
+    socket.emit('startGame', {})
+  }
+
+  leaveGame() {
+    socket.emit('leaveGame', {})
   }
 
   render() {
@@ -99,12 +115,17 @@ class Lobby extends React.Component {
           <br/>
 
           <Link to={'/'}>
-            <Button>
+            <Button onClick={this.leaveGame}>
               Leave Game 
             </Button>
           </Link>
-          <Link to={'/game/' + this.state.lobbyId}>
-            <Button primary>
+          <Link to={
+            {
+              pathname: '/game/' + this.state.lobbyId,
+              state: this.state,
+            }
+          }>
+            <Button primary onClick={this.startGame}>
               Start Game 
             </Button>
           </Link>
