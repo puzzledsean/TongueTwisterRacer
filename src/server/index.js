@@ -10,17 +10,43 @@ import routes from '../shared/routes'
 const app = express()
 const http = require("http");
 const socketIo = require("socket.io");
+const db = require('../../auth.json')['mongoURI'];
+
+// Set up database to MLab
+var mongoose = require('mongoose');
+mongoose
+    .connect(db)
+    .then(() => console.log('MongoDB connected...'))
+    .catch(err => console.log(err));
 
 app.use(cors())
+app.use(express.json());
 app.use(express.static("public"))
+app.use(express.json());
 
 // Define socket.io connection
 const server = http.createServer(app);
 const io = socketIo(server);
 io.on("connection", socket => {
-  console.log("New client connected")
   socket.on("disconnect", () => console.log("Client disconnected"));
+  socket.on('connected', function(data) {
+    console.log('New connection from lobby', data)
+    socket.emit('newUser', data)
+  });
+
+  // Handle when a user joins/updates the lobby.
+  socket.on('lobbyUpdateToServer', function(data) {
+    io.emit('lobbyUpdateToClient', data)
+  })
 });
+
+const game = require('./controllers/GameController.js');
+
+// Creates a lobby in MongoDB.
+app.post("/api/createLobby", game.create)
+
+// Updates a lobby in MongoDB.
+app.post("/api/updateLobby", game.update)
 
 app.get("*", (req, res, next) => {
   const activeRoute = routes.find((route) => matchPath(req.url, route)) || {}

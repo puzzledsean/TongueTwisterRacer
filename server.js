@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "/";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 4);
+/******/ 	return __webpack_require__(__webpack_require__.s = 5);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -77,6 +77,12 @@ module.exports = require("react-router-dom");
 
 /***/ }),
 /* 2 */
+/***/ (function(module, exports) {
+
+module.exports = require("styled-components");
+
+/***/ }),
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -86,27 +92,27 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _Home = __webpack_require__(10);
+var _Home = __webpack_require__(11);
 
 var _Home2 = _interopRequireDefault(_Home);
 
-var _Join = __webpack_require__(11);
+var _Join = __webpack_require__(12);
 
 var _Join2 = _interopRequireDefault(_Join);
 
-var _Create = __webpack_require__(12);
+var _Create = __webpack_require__(13);
 
 var _Create2 = _interopRequireDefault(_Create);
 
-var _Lobby = __webpack_require__(13);
+var _Lobby = __webpack_require__(14);
 
 var _Lobby2 = _interopRequireDefault(_Lobby);
 
-var _Grid = __webpack_require__(15);
+var _Grid = __webpack_require__(16);
 
 var _Grid2 = _interopRequireDefault(_Grid);
 
-var _api = __webpack_require__(16);
+var _api = __webpack_require__(17);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -137,23 +143,23 @@ var routes = [{
 exports.default = routes;
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports) {
 
-module.exports = require("styled-components");
+module.exports = require("mongoose");
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _express = __webpack_require__(5);
+var _express = __webpack_require__(6);
 
 var _express2 = _interopRequireDefault(_express);
 
-var _cors = __webpack_require__(6);
+var _cors = __webpack_require__(7);
 
 var _cors2 = _interopRequireDefault(_cors);
 
@@ -161,40 +167,67 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _server = __webpack_require__(7);
+var _server = __webpack_require__(8);
 
 var _reactRouterDom = __webpack_require__(1);
 
-var _serializeJavascript = __webpack_require__(8);
+var _serializeJavascript = __webpack_require__(9);
 
 var _serializeJavascript2 = _interopRequireDefault(_serializeJavascript);
 
-var _App = __webpack_require__(9);
+var _App = __webpack_require__(10);
 
 var _App2 = _interopRequireDefault(_App);
 
-var _routes = __webpack_require__(2);
+var _routes = __webpack_require__(3);
 
 var _routes2 = _interopRequireDefault(_routes);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var app = (0, _express2.default)();
-var http = __webpack_require__(19);
-var socketIo = __webpack_require__(20);
+var http = __webpack_require__(20);
+var socketIo = __webpack_require__(21);
+var db = __webpack_require__(22)['mongoURI'];
+
+// Set up database to MLab
+var mongoose = __webpack_require__(4);
+mongoose.connect(db).then(function () {
+  return console.log('MongoDB connected...');
+}).catch(function (err) {
+  return console.log(err);
+});
 
 app.use((0, _cors2.default)());
+app.use(_express2.default.json());
 app.use(_express2.default.static("public"));
+app.use(_express2.default.json());
 
 // Define socket.io connection
 var server = http.createServer(app);
 var io = socketIo(server);
 io.on("connection", function (socket) {
-  console.log("New client connected");
   socket.on("disconnect", function () {
     return console.log("Client disconnected");
   });
+  socket.on('connected', function (data) {
+    console.log('New connection from lobby', data);
+    socket.emit('newUser', data);
+  });
+
+  // Handle when a user joins/updates the lobby.
+  socket.on('lobbyUpdateToServer', function (data) {
+    io.emit('lobbyUpdateToClient', data);
+  });
 });
+
+var game = __webpack_require__(23);
+
+// Creates a lobby in MongoDB.
+app.post("/api/createLobby", game.create);
+
+// Updates a lobby in MongoDB.
+app.post("/api/updateLobby", game.update);
 
 app.get("*", function (req, res, next) {
   var activeRoute = _routes2.default.find(function (route) {
@@ -228,31 +261,31 @@ server.listen(3000, function () {
 */
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports) {
 
 module.exports = require("express");
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports) {
 
 module.exports = require("cors");
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports) {
 
 module.exports = require("react-dom/server");
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports) {
 
 module.exports = require("serialize-javascript");
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -270,13 +303,13 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _routes = __webpack_require__(2);
+var _routes = __webpack_require__(3);
 
 var _routes2 = _interopRequireDefault(_routes);
 
 var _reactRouterDom = __webpack_require__(1);
 
-var _NoMatch = __webpack_require__(18);
+var _NoMatch = __webpack_require__(19);
 
 var _NoMatch2 = _interopRequireDefault(_NoMatch);
 
@@ -332,7 +365,7 @@ var App = function (_Component) {
 exports.default = App;
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -353,7 +386,7 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRouterDom = __webpack_require__(1);
 
-var _styledComponents = __webpack_require__(3);
+var _styledComponents = __webpack_require__(2);
 
 var _styledComponents2 = _interopRequireDefault(_styledComponents);
 
@@ -396,7 +429,7 @@ function Home() {
 }
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -417,7 +450,7 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRouterDom = __webpack_require__(1);
 
-var _styledComponents = __webpack_require__(3);
+var _styledComponents = __webpack_require__(2);
 
 var _styledComponents2 = _interopRequireDefault(_styledComponents);
 
@@ -449,7 +482,8 @@ var Join = function (_React$Component) {
 
     _this.state = {
       lobbyId: NaN,
-      userName: NaN
+      userName: NaN,
+      isCreator: false // joining a game means someone else has already created a lobby.
     };
 
     _this.handleUserName = _this.handleUserName.bind(_this);
@@ -466,12 +500,6 @@ var Join = function (_React$Component) {
     key: 'handleLobbyId',
     value: function handleLobbyId(event) {
       this.setState({ lobbyId: event.target.value });
-    }
-  }, {
-    key: 'genLobbyID',
-    value: function genLobbyID() {
-      // Credit: https://gist.github.com/gordonbrander/2230317
-      return Math.random().toString(36).substr(2, 6);
     }
   }, {
     key: 'render',
@@ -503,7 +531,10 @@ var Join = function (_React$Component) {
         ),
         _react2.default.createElement(
           _reactRouterDom.Link,
-          { to: '/lobby/' + this.state.lobbyId },
+          { to: {
+              pathname: '/lobby/' + this.state.lobbyId,
+              state: this.state
+            } },
           _react2.default.createElement(
             Button,
             { primary: true },
@@ -520,7 +551,7 @@ var Join = function (_React$Component) {
 exports.default = Join;
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -541,7 +572,7 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRouterDom = __webpack_require__(1);
 
-var _styledComponents = __webpack_require__(3);
+var _styledComponents = __webpack_require__(2);
 
 var _styledComponents2 = _interopRequireDefault(_styledComponents);
 
@@ -573,7 +604,8 @@ var Create = function (_React$Component) {
 
     _this.state = {
       lobbyId: NaN,
-      userName: NaN
+      userName: NaN,
+      isCreator: true
     };
 
     _this.handleUserName = _this.handleUserName.bind(_this);
@@ -628,7 +660,10 @@ var Create = function (_React$Component) {
         ),
         _react2.default.createElement(
           _reactRouterDom.Link,
-          { to: '/lobby/' + this.state.lobbyId },
+          { to: {
+              pathname: '/lobby/' + this.state.lobbyId,
+              state: this.state
+            } },
           _react2.default.createElement(
             Button,
             { primary: true },
@@ -645,7 +680,7 @@ var Create = function (_React$Component) {
 exports.default = Create;
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -664,13 +699,13 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _socket = __webpack_require__(14);
+var _socket = __webpack_require__(15);
 
 var _socket2 = _interopRequireDefault(_socket);
 
 var _reactRouterDom = __webpack_require__(1);
 
-var _styledComponents = __webpack_require__(3);
+var _styledComponents = __webpack_require__(2);
 
 var _styledComponents2 = _interopRequireDefault(_styledComponents);
 
@@ -693,6 +728,8 @@ var Button = _styledComponents2.default.button(_templateObject, function (props)
 var Container = _styledComponents2.default.div(_templateObject2);
 
 var SERVER_ENDPOINT = "http://127.0.0.1:3000";
+// Establish a socket connection
+var socket = (0, _socket2.default)(SERVER_ENDPOINT);
 
 var Lobby = function (_React$Component) {
   _inherits(Lobby, _React$Component);
@@ -703,7 +740,9 @@ var Lobby = function (_React$Component) {
     var _this = _possibleConstructorReturn(this, (Lobby.__proto__ || Object.getPrototypeOf(Lobby)).call(this, props));
 
     _this.state = {
-      lobbyId: _this.props.match.params.id
+      lobbyId: _this.props.match.params.id,
+      userNames: [],
+      isCreator: false
     };
     return _this;
   }
@@ -711,11 +750,62 @@ var Lobby = function (_React$Component) {
   _createClass(Lobby, [{
     key: 'componentDidMount',
     value: function componentDidMount() {
-      var socket = (0, _socket2.default)(SERVER_ENDPOINT);
+      var _this2 = this;
+
+      var passedState = this.props.location.state;
+
+      // Update the local lobby with this user.
+      this.setState({
+        userNames: this.state.userNames.concat(passedState.userName),
+        isCreator: passedState.isCreator
+      }, function () {
+        // Either create a new lobby in db or update the lobby in db.
+        if (_this2.state.isCreator) {
+          fetch(SERVER_ENDPOINT + '/api/createLobby', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              'state': _this2.state
+            })
+          });
+        } else {
+          fetch(SERVER_ENDPOINT + '/api/updateLobby', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              'state': _this2.state
+            })
+          }).then(function (response) {
+            response.json().then(function (data) {
+              socket.emit('lobbyUpdateToServer', data);
+            });
+          });
+        }
+      });
+
+      // Update the lobby
+      socket.on('lobbyUpdateToClient', function (data) {
+        _this2.setState({
+          userNames: data.userNames
+        });
+      });
     }
   }, {
     key: 'render',
     value: function render() {
+      var userList = this.state.userNames.map(function (userName) {
+        return _react2.default.createElement(
+          'li',
+          { key: userName },
+          userName
+        );
+      });
       return _react2.default.createElement(
         Container,
         null,
@@ -732,6 +822,14 @@ var Lobby = function (_React$Component) {
           null,
           this.state.lobbyId
         ),
+        _react2.default.createElement('br', null),
+        _react2.default.createElement('br', null),
+        _react2.default.createElement(
+          'h2',
+          null,
+          'Players:'
+        ),
+        userList,
         _react2.default.createElement('br', null),
         _react2.default.createElement(
           _reactRouterDom.Link,
@@ -761,13 +859,13 @@ var Lobby = function (_React$Component) {
 exports.default = Lobby;
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports) {
 
 module.exports = require("socket.io-client");
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -914,7 +1012,7 @@ var Grid = function (_Component) {
 exports.default = Grid;
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -925,7 +1023,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.fetchPopularRepos = fetchPopularRepos;
 
-var _isomorphicFetch = __webpack_require__(17);
+var _isomorphicFetch = __webpack_require__(18);
 
 var _isomorphicFetch2 = _interopRequireDefault(_isomorphicFetch);
 
@@ -947,13 +1045,13 @@ function fetchPopularRepos() {
 }
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports) {
 
 module.exports = require("isomorphic-fetch");
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -979,16 +1077,88 @@ function NoMatch() {
 }
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports) {
 
 module.exports = require("http");
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports) {
 
 module.exports = require("socket.io");
+
+/***/ }),
+/* 22 */
+/***/ (function(module, exports) {
+
+module.exports = {"mongoURI":"mongodb://root:root123@ds231133.mlab.com:31133/tonguetwisterracer"}
+
+/***/ }),
+/* 23 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var Game = __webpack_require__(24);
+
+// Create and Save a new Game 
+exports.create = function (req, res) {
+    // Validate request
+    if (!req.body.state) {
+        return res.status(400).send(JSON.stringify({
+            message: "Body can not be empty"
+        }));
+    }
+
+    // Create a Game 
+    var game = new Game({
+        lobbyId: req.body.state.lobbyId,
+        userNames: req.body.state.userNames
+    });
+
+    // Save Game in the database
+    game.save().then(function (data) {
+        res.json(data);
+    }).catch(function (err) {
+        res.status(500).send({
+            message: err.message || "Some error occurred while creating the Game."
+        });
+    });
+};
+
+// Update a game lobby identified by the lobbyId in the request
+exports.update = function (req, res) {
+    // First find by lobbyId.
+    Game.findOne({ lobbyId: req.body.state.lobbyId }, function (err, doc) {
+        // Get the actual documentId to update with the userNames from the document attributes.
+        Game.findByIdAndUpdate(doc['_id'], { $set: { userNames: doc['userNames'].concat(req.body.state.userNames) } }, { new: true }, function (err, result) {
+            res.json({
+                'lobbyId': result['lobbyId'],
+                'userNames': result['userNames']
+            });
+        });
+    });
+};
+
+/***/ }),
+/* 24 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var mongoose = __webpack_require__(4);
+
+// Basic Game Schema, might change later.
+var GameSchema = mongoose.Schema({
+    lobbyId: { type: String, required: true },
+    userNames: { type: Array, "default": [] },
+    userScores: { type: Array, "default": [] }
+});
+
+module.exports = mongoose.model('Game', GameSchema);
 
 /***/ })
 /******/ ]);

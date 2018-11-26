@@ -19,20 +19,69 @@ const Container = styled.div`
 `
 
 const SERVER_ENDPOINT = "http://127.0.0.1:3000" 
+// Establish a socket connection
+const socket = socketIOClient(SERVER_ENDPOINT);
 
 class Lobby extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      lobbyId: this.props.match.params.id
+      lobbyId: this.props.match.params.id,
+      userNames: [],
+      isCreator: false,
     }
   }
 
   componentDidMount() {
-    const socket = socketIOClient(SERVER_ENDPOINT);
+    var passedState = this.props.location.state;
+
+    // Update the local lobby with this user.
+    this.setState({
+        userNames: this.state.userNames.concat(passedState.userName),
+        isCreator: passedState.isCreator,
+    }, () => {
+      // Either create a new lobby in db or update the lobby in db.
+      if(this.state.isCreator) {
+        fetch(SERVER_ENDPOINT + '/api/createLobby', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            'state': this.state,
+          })
+        })
+      } else {
+        fetch(SERVER_ENDPOINT + '/api/updateLobby', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            'state': this.state,
+          })
+        }).then(response => {
+          response.json().then(data => {
+            socket.emit('lobbyUpdateToServer', data);
+          })
+        })
+      }
+    })
+
+    // Update the lobby
+    socket.on('lobbyUpdateToClient', (data) => {
+      this.setState({
+        userNames: data.userNames,
+      })
+    })
   }
 
   render() {
+    const userList = this.state.userNames.map((userName) =>
+        <li key={userName}>{userName}</li>
+    );
     return (
       <Container>
           <h1>
@@ -41,6 +90,12 @@ class Lobby extends React.Component {
           Share the code with a friend 
           <br/>
           Lobby code is <b>{this.state.lobbyId}</b>
+          <br/>
+          <br/>
+          <h2>
+            Players:  
+          </h2>
+          {userList}
           <br/>
 
           <Link to={'/'}>

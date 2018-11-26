@@ -23,6 +23,7 @@ class Create extends React.Component {
     this.state = {
       lobbyId: NaN, 
       userName: NaN,
+      isCreator: true,
     }
 
     this.handleUserName = this.handleUserName.bind(this);
@@ -59,7 +60,12 @@ class Create extends React.Component {
               Back 
             </Button>
           </Link>
-          <Link to={'/lobby/' + this.state.lobbyId}>
+          <Link to={
+            {
+              pathname:'/lobby/' + this.state.lobbyId,
+              state: this.state,
+            }
+           }>
             <Button primary>
               Create
             </Button>

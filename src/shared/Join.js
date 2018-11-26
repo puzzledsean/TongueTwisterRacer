@@ -23,6 +23,7 @@ class Join extends React.Component {
     this.state = {
       lobbyId: NaN, 
       userName: NaN,
+      isCreator: false, // joining a game means someone else has already created a lobby.
     }
 
     this.handleUserName = this.handleUserName.bind(this);
@@ -36,11 +37,6 @@ class Join extends React.Component {
   handleLobbyId(event) {
     this.setState({lobbyId: event.target.value});
   }
-
-  genLobbyID() {
-    // Credit: https://gist.github.com/gordonbrander/2230317
-    return Math.random().toString(36).substr(2, 6);
-  };
 
   render() {
     return (
@@ -64,7 +60,12 @@ class Join extends React.Component {
               Back 
             </Button>
           </Link>
-          <Link to={'/lobby/' + this.state.lobbyId}>
+          <Link to={
+            {
+              pathname:'/lobby/' + this.state.lobbyId,
+              state: this.state,
+            }
+           }>
             <Button primary>
               Join 
             </Button>
