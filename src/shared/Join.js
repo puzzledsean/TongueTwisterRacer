@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
+import { Player } from './Player';
 
 const Button = styled.button`
   background: ${props => props.primary ? "palevioletred" : "white"};
@@ -22,20 +23,38 @@ class Join extends React.Component {
     super(props);
     this.state = {
       lobbyId: NaN, 
-      userName: NaN,
+      currentPlayer: NaN,
       isCreator: false, // joining a game means someone else has already created a lobby.
     }
 
-    this.handleUserName = this.handleUserName.bind(this);
+    this.handleCurrentPlayer = this.handleCurrentPlayer.bind(this);
     this.handleLobbyId = this.handleLobbyId.bind(this);
   }
 
-  handleUserName(event) {
-    this.setState({userName: event.target.value});
+  componentDidMount () {
+  }
+
+  handleCurrentPlayer(event) {
+    var UID = this.genUID()
+    this.setState({
+      currentPlayer: new Player(event.target.value, 0, UID),
+    });
   }
 
   handleLobbyId(event) {
-    this.setState({lobbyId: event.target.value});
+    this.setState({
+      lobbyId: event.target.value
+    });
+  }
+
+  genUID() {
+    // Credit: https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
+    function s4() {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    }
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
   }
 
   render() {
@@ -47,7 +66,7 @@ class Join extends React.Component {
 
           Enter your name 
           <br/>
-          <input type="text" onChange={this.handleUserName}></input>
+          <input type="text" name="currentPlayer" onChange={this.handleCurrentPlayer}></input>
 
           <br/>
           Enter Lobby to join

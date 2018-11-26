@@ -34,12 +34,21 @@ io.on("connection", socket => {
   });
 
   // Handle when a user joins/updates the lobby.
-  socket.on('lobbyUpdateToServer', function(data) {
-    io.emit('lobbyUpdateToClient', data)
+  socket.on('lobbyJoinServer', function(data) {
+    // Tell all socket connections someone has joined.
+    io.emit('lobbyJoinClient', data)
   })
 
-  socket.on('startGame', () => {
-    io.emit('startGameToClient')
+  // Handle when a user leaves/updates the lobby.
+  socket.on('lobbyLeaveServer', function(data) {
+    // Tell all socket connections (except sender) someone has left.
+    socket.broadcast.emit('lobbyLeaveClient', data)
+  })
+
+  // Handle when a user starts the game.
+  socket.on('startGameServer', () => {
+    // Tell all socket connections someone has started the game.
+    io.emit('startGameClient')
   })
 });
 
@@ -48,8 +57,11 @@ const game = require('./controllers/GameController.js');
 // Creates a lobby in MongoDB.
 app.post("/api/createLobby", game.create)
 
-// Updates a lobby in MongoDB.
-app.post("/api/updateLobby", game.update)
+// Joins a lobby in MongoDB.
+app.post("/api/joinLobby", game.join)
+
+// Leaves a lobby in MongoDB.
+app.post("/api/leaveLobby", game.leave)
 
 app.get("*", (req, res, next) => {
   const activeRoute = routes.find((route) => matchPath(req.url, route)) || {}

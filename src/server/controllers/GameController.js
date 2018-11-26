@@ -13,8 +13,8 @@ exports.create = (req, res) => {
 
     // Create a Game 
     const game = new Game({
-        lobbyId: req.body.state.lobbyId,
-        userNames: req.body.state.userNames,
+        lobbyId : req.body.state.lobbyId,
+        players : req.body.state.players,
     });
 
     // Save Game in the database
@@ -29,21 +29,48 @@ exports.create = (req, res) => {
     });
 };
 
-// Update a game lobby identified by the lobbyId in the request
-exports.update = (req, res) => {
+// Join a game lobby identified by the lobbyId in the request
+exports.join = (req, res) => {
     // First find by lobbyId.
     Game.findOne(
         {lobbyId: req.body.state.lobbyId}, 
         function (err, doc) {
-            // Get the actual documentId to update with the userNames from the document attributes.
+            // Get the actual documentId to update with the players list from the document attributes.
             Game.findByIdAndUpdate(
                 doc['_id'],
-                {$set: {userNames: doc['userNames'].concat(req.body.state.userNames)}},
+                {$set: {players : doc['players'].concat(req.body.state.players)}},
                 {new:true},
                 function(err,result) {
                     res.json({
                         'lobbyId': result['lobbyId'],
-                        'userNames': result['userNames']
+                        'players': result['players']
+                    })
+                }
+            )
+        }
+    )
+};
+
+// Leaves a game lobby identified by the lobbyId in the request
+exports.leave = (req, res) => {
+    // First find by lobbyId.
+    Game.findOne(
+        {lobbyId: req.body.state.lobbyId}, 
+        function (err, doc) {
+            // Get the actual documentId to update with the players list from the document attributes.
+            Game.findByIdAndUpdate(
+                doc['_id'],
+                {
+                    $pull: { 'players' : {
+                        'UID': req.body.socketId
+                        }
+                    }
+                },
+                {'new': true},
+                function(err,result) {
+                    res.json({
+                        'lobbyId': result['lobbyId'],
+                        'players': result['players']
                     })
                 }
             )

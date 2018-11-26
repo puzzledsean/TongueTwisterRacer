@@ -27,17 +27,22 @@ class Lobby extends React.Component {
     super(props);
     this.state = {
       lobbyId: this.props.match.params.id,
-      userNames: [],
+      players: [],
       isCreator: false,
     }
+    this.leaveGame = this.leaveGame.bind(this);
   }
 
   componentDidMount() {
     var passedState = this.props.location.state;
+    var currentPlayer = passedState.currentPlayer;
+
+    // Player's UID is the socket id
+    currentPlayer.setUID(socket.id);
 
     // Update the local lobby with this user.
     this.setState({
-        userNames: this.state.userNames.concat(passedState.userName),
+        players: this.state.players.concat(currentPlayer),
         isCreator: passedState.isCreator,
     }, () => {
       // Either create a new lobby in db or update the lobby in db.
@@ -53,7 +58,7 @@ class Lobby extends React.Component {
           })
         })
       } else {
-        fetch(SERVER_ENDPOINT + '/api/updateLobby', {
+        fetch(SERVER_ENDPOINT + '/api/joinLobby', {
           method: 'POST',
           headers: {
             'Accept': 'application/json',
@@ -64,21 +69,28 @@ class Lobby extends React.Component {
           })
         }).then(response => {
           response.json().then(data => {
-            socket.emit('lobbyUpdateToServer', data);
+            socket.emit('lobbyJoinServer', data);
           })
         })
       }
     })
 
-    // Update the lobby
-    socket.on('lobbyUpdateToClient', (data) => {
+    // Update join lobby action
+    socket.on('lobbyJoinClient', (data) => {
       this.setState({
-        userNames: data.userNames,
+        players: data.players,
+      })
+    })
+
+    // Update leave lobby action
+    socket.on('lobbyLeaveClient', (data) => {
+      this.setState({
+        players: data.players,
       })
     })
 
     // Redirect to the game if someone started. 
-    socket.on('startGameToClient', () => {
+    socket.on('startGameClient', () => {
       this.props.history.push({
         pathname: '/game/' + this.state.lobbyId,
         state: this.state,
@@ -87,16 +99,30 @@ class Lobby extends React.Component {
   }
 
   startGame() {
-    socket.emit('startGame', {})
+    socket.emit('startGameServer', {})
   }
 
   leaveGame() {
-    socket.emit('leaveGame', {})
+    fetch(SERVER_ENDPOINT + '/api/leaveLobby', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        'state': this.state,
+        'socketId' : socket.id,
+      })
+    }).then(response => {
+      response.json().then(data => {
+        socket.emit('lobbyLeaveServer', data);
+      })
+    })
   }
 
   render() {
-    const userList = this.state.userNames.map((userName) =>
-        <li key={userName}>{userName}</li>
+    const userList = this.state.players.map((player) =>
+        <li key={player.username}>{player.username}</li>
     );
     return (
       <Container>

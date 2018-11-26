@@ -1,6 +1,7 @@
 import React from 'react'
 import SpeechRecognition from 'react-speech-recognition'
 import styled from 'styled-components'
+import { Player } from './Player';
 
 const Button = styled.button`
   background: palevioletred;
@@ -26,9 +27,7 @@ class Game extends React.Component {
       super(props);
       this.state = {
         lobbyId: this.props.match.params.id,
-        userNames: [],
-        userScores: [0, 0], // in order for a game to start, it can only have two players.
-        isCreator: false,
+        players: [],
       }
     }
   
@@ -37,7 +36,7 @@ class Game extends React.Component {
   
       // Update the local lobby with this user.
       this.setState({
-          userNames: passedState.userNames
+          players : passedState.players
       })
     }
 
@@ -47,8 +46,8 @@ class Game extends React.Component {
         if (!browserSupportsSpeechRecognition) {
             return null
         }
-        const userList = this.state.userNames.map((userName) =>
-            <li key={userName}>{userName}: 0</li>
+        const userList = this.state.players.map((player) =>
+            <li key={player.username}>{player.username}: 0</li>
         );
 
         let userResponse;

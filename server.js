@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "/";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 5);
+/******/ 	return __webpack_require__(__webpack_require__.s = 6);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -89,34 +89,68 @@ module.exports = require("styled-components");
 
 
 Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Player = exports.Player = function () {
+    function Player(username, score) {
+        _classCallCheck(this, Player);
+
+        this.username = username;
+        this.score = score;
+        this.UID = NaN;
+    }
+
+    _createClass(Player, [{
+        key: "setUID",
+        value: function setUID(UID) {
+            this.UID = UID;
+        }
+    }]);
+
+    return Player;
+}();
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _Home = __webpack_require__(11);
+var _Home = __webpack_require__(12);
 
 var _Home2 = _interopRequireDefault(_Home);
 
-var _Join = __webpack_require__(12);
+var _Join = __webpack_require__(13);
 
 var _Join2 = _interopRequireDefault(_Join);
 
-var _Create = __webpack_require__(13);
+var _Create = __webpack_require__(14);
 
 var _Create2 = _interopRequireDefault(_Create);
 
-var _Lobby = __webpack_require__(14);
+var _Lobby = __webpack_require__(15);
 
 var _Lobby2 = _interopRequireDefault(_Lobby);
 
-var _Game = __webpack_require__(16);
+var _Game = __webpack_require__(17);
 
 var _Game2 = _interopRequireDefault(_Game);
 
-var _Grid = __webpack_require__(18);
+var _Grid = __webpack_require__(19);
 
 var _Grid2 = _interopRequireDefault(_Grid);
 
-var _api = __webpack_require__(19);
+var _api = __webpack_require__(20);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -150,23 +184,23 @@ var routes = [{
 exports.default = routes;
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports) {
 
 module.exports = require("mongoose");
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _express = __webpack_require__(6);
+var _express = __webpack_require__(7);
 
 var _express2 = _interopRequireDefault(_express);
 
-var _cors = __webpack_require__(7);
+var _cors = __webpack_require__(8);
 
 var _cors2 = _interopRequireDefault(_cors);
 
@@ -174,31 +208,31 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _server = __webpack_require__(8);
+var _server = __webpack_require__(9);
 
 var _reactRouterDom = __webpack_require__(1);
 
-var _serializeJavascript = __webpack_require__(9);
+var _serializeJavascript = __webpack_require__(10);
 
 var _serializeJavascript2 = _interopRequireDefault(_serializeJavascript);
 
-var _App = __webpack_require__(10);
+var _App = __webpack_require__(11);
 
 var _App2 = _interopRequireDefault(_App);
 
-var _routes = __webpack_require__(3);
+var _routes = __webpack_require__(4);
 
 var _routes2 = _interopRequireDefault(_routes);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var app = (0, _express2.default)();
-var http = __webpack_require__(22);
-var socketIo = __webpack_require__(23);
-var db = __webpack_require__(24)['mongoURI'];
+var http = __webpack_require__(23);
+var socketIo = __webpack_require__(24);
+var db = __webpack_require__(25)['mongoURI'];
 
 // Set up database to MLab
-var mongoose = __webpack_require__(4);
+var mongoose = __webpack_require__(5);
 mongoose.connect(db).then(function () {
   return console.log('MongoDB connected...');
 }).catch(function (err) {
@@ -222,22 +256,34 @@ io.on("connection", function (socket) {
   });
 
   // Handle when a user joins/updates the lobby.
-  socket.on('lobbyUpdateToServer', function (data) {
-    io.emit('lobbyUpdateToClient', data);
+  socket.on('lobbyJoinServer', function (data) {
+    // Tell all socket connections someone has joined.
+    io.emit('lobbyJoinClient', data);
   });
 
-  socket.on('startGame', function () {
-    io.emit('startGameToClient');
+  // Handle when a user leaves/updates the lobby.
+  socket.on('lobbyLeaveServer', function (data) {
+    // Tell all socket connections (except sender) someone has left.
+    socket.broadcast.emit('lobbyLeaveClient', data);
+  });
+
+  // Handle when a user starts the game.
+  socket.on('startGameServer', function () {
+    // Tell all socket connections someone has started the game.
+    io.emit('startGameClient');
   });
 });
 
-var game = __webpack_require__(25);
+var game = __webpack_require__(26);
 
 // Creates a lobby in MongoDB.
 app.post("/api/createLobby", game.create);
 
-// Updates a lobby in MongoDB.
-app.post("/api/updateLobby", game.update);
+// Joins a lobby in MongoDB.
+app.post("/api/joinLobby", game.join);
+
+// Leaves a lobby in MongoDB.
+app.post("/api/leaveLobby", game.leave);
 
 app.get("*", function (req, res, next) {
   var activeRoute = _routes2.default.find(function (route) {
@@ -271,31 +317,31 @@ server.listen(3000, function () {
 */
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports) {
 
 module.exports = require("express");
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports) {
 
 module.exports = require("cors");
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports) {
 
 module.exports = require("react-dom/server");
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports) {
 
 module.exports = require("serialize-javascript");
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -313,13 +359,13 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _routes = __webpack_require__(3);
+var _routes = __webpack_require__(4);
 
 var _routes2 = _interopRequireDefault(_routes);
 
 var _reactRouterDom = __webpack_require__(1);
 
-var _NoMatch = __webpack_require__(21);
+var _NoMatch = __webpack_require__(22);
 
 var _NoMatch2 = _interopRequireDefault(_NoMatch);
 
@@ -375,7 +421,7 @@ var App = function (_Component) {
 exports.default = App;
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -439,7 +485,7 @@ function Home() {
 }
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -463,6 +509,8 @@ var _reactRouterDom = __webpack_require__(1);
 var _styledComponents = __webpack_require__(2);
 
 var _styledComponents2 = _interopRequireDefault(_styledComponents);
+
+var _Player = __webpack_require__(3);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -492,24 +540,41 @@ var Join = function (_React$Component) {
 
     _this.state = {
       lobbyId: NaN,
-      userName: NaN,
+      currentPlayer: NaN,
       isCreator: false // joining a game means someone else has already created a lobby.
     };
 
-    _this.handleUserName = _this.handleUserName.bind(_this);
+    _this.handleCurrentPlayer = _this.handleCurrentPlayer.bind(_this);
     _this.handleLobbyId = _this.handleLobbyId.bind(_this);
     return _this;
   }
 
   _createClass(Join, [{
-    key: 'handleUserName',
-    value: function handleUserName(event) {
-      this.setState({ userName: event.target.value });
+    key: 'componentDidMount',
+    value: function componentDidMount() {}
+  }, {
+    key: 'handleCurrentPlayer',
+    value: function handleCurrentPlayer(event) {
+      var UID = this.genUID();
+      this.setState({
+        currentPlayer: new _Player.Player(event.target.value, 0, UID)
+      });
     }
   }, {
     key: 'handleLobbyId',
     value: function handleLobbyId(event) {
-      this.setState({ lobbyId: event.target.value });
+      this.setState({
+        lobbyId: event.target.value
+      });
+    }
+  }, {
+    key: 'genUID',
+    value: function genUID() {
+      // Credit: https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
+      function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+      }
+      return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
     }
   }, {
     key: 'render',
@@ -524,7 +589,7 @@ var Join = function (_React$Component) {
         ),
         'Enter your name',
         _react2.default.createElement('br', null),
-        _react2.default.createElement('input', { type: 'text', onChange: this.handleUserName }),
+        _react2.default.createElement('input', { type: 'text', name: 'currentPlayer', onChange: this.handleCurrentPlayer }),
         _react2.default.createElement('br', null),
         'Enter Lobby to join',
         _react2.default.createElement('br', null),
@@ -561,7 +626,7 @@ var Join = function (_React$Component) {
 exports.default = Join;
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -585,6 +650,8 @@ var _reactRouterDom = __webpack_require__(1);
 var _styledComponents = __webpack_require__(2);
 
 var _styledComponents2 = _interopRequireDefault(_styledComponents);
+
+var _Player = __webpack_require__(3);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -614,11 +681,11 @@ var Create = function (_React$Component) {
 
     _this.state = {
       lobbyId: NaN,
-      userName: NaN,
+      currentPlayer: NaN,
       isCreator: true
     };
 
-    _this.handleUserName = _this.handleUserName.bind(_this);
+    _this.handleCurrentPlayer = _this.handleCurrentPlayer.bind(_this);
     return _this;
   }
 
@@ -634,15 +701,27 @@ var Create = function (_React$Component) {
       });
     }
   }, {
-    key: 'handleUserName',
-    value: function handleUserName(event) {
-      this.setState({ userName: event.target.value });
+    key: 'handleCurrentPlayer',
+    value: function handleCurrentPlayer(event) {
+      var UID = this.genUID();
+      this.setState({
+        currentPlayer: new _Player.Player(event.target.value, 0, UID)
+      });
     }
   }, {
     key: 'genLobbyID',
     value: function genLobbyID() {
       // Credit: https://gist.github.com/gordonbrander/2230317
       return Math.random().toString(36).substr(2, 6);
+    }
+  }, {
+    key: 'genUID',
+    value: function genUID() {
+      // Credit: https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
+      function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+      }
+      return s4() + s4() + '-' + s4();
     }
   }, {
     key: 'render',
@@ -657,7 +736,7 @@ var Create = function (_React$Component) {
         ),
         'Enter your name',
         _react2.default.createElement('br', null),
-        _react2.default.createElement('input', { type: 'text', name: 'userName', onChange: this.handleUserName }),
+        _react2.default.createElement('input', { type: 'text', name: 'currentPlayer', onChange: this.handleCurrentPlayer }),
         _react2.default.createElement('br', null),
         _react2.default.createElement(
           _reactRouterDom.Link,
@@ -690,7 +769,7 @@ var Create = function (_React$Component) {
 exports.default = Create;
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -709,7 +788,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _socket = __webpack_require__(15);
+var _socket = __webpack_require__(16);
 
 var _socket2 = _interopRequireDefault(_socket);
 
@@ -751,9 +830,10 @@ var Lobby = function (_React$Component) {
 
     _this.state = {
       lobbyId: _this.props.match.params.id,
-      userNames: [],
+      players: [],
       isCreator: false
     };
+    _this.leaveGame = _this.leaveGame.bind(_this);
     return _this;
   }
 
@@ -763,10 +843,14 @@ var Lobby = function (_React$Component) {
       var _this2 = this;
 
       var passedState = this.props.location.state;
+      var currentPlayer = passedState.currentPlayer;
+
+      // Player's UID is the socket id
+      currentPlayer.setUID(socket.id);
 
       // Update the local lobby with this user.
       this.setState({
-        userNames: this.state.userNames.concat(passedState.userName),
+        players: this.state.players.concat(currentPlayer),
         isCreator: passedState.isCreator
       }, function () {
         // Either create a new lobby in db or update the lobby in db.
@@ -782,7 +866,7 @@ var Lobby = function (_React$Component) {
             })
           });
         } else {
-          fetch(SERVER_ENDPOINT + '/api/updateLobby', {
+          fetch(SERVER_ENDPOINT + '/api/joinLobby', {
             method: 'POST',
             headers: {
               'Accept': 'application/json',
@@ -793,21 +877,28 @@ var Lobby = function (_React$Component) {
             })
           }).then(function (response) {
             response.json().then(function (data) {
-              socket.emit('lobbyUpdateToServer', data);
+              socket.emit('lobbyJoinServer', data);
             });
           });
         }
       });
 
-      // Update the lobby
-      socket.on('lobbyUpdateToClient', function (data) {
+      // Update join lobby action
+      socket.on('lobbyJoinClient', function (data) {
         _this2.setState({
-          userNames: data.userNames
+          players: data.players
+        });
+      });
+
+      // Update leave lobby action
+      socket.on('lobbyLeaveClient', function (data) {
+        _this2.setState({
+          players: data.players
         });
       });
 
       // Redirect to the game if someone started. 
-      socket.on('startGameToClient', function () {
+      socket.on('startGameClient', function () {
         _this2.props.history.push({
           pathname: '/game/' + _this2.state.lobbyId,
           state: _this2.state
@@ -817,21 +908,35 @@ var Lobby = function (_React$Component) {
   }, {
     key: 'startGame',
     value: function startGame() {
-      socket.emit('startGame', {});
+      socket.emit('startGameServer', {});
     }
   }, {
     key: 'leaveGame',
     value: function leaveGame() {
-      socket.emit('leaveGame', {});
+      fetch(SERVER_ENDPOINT + '/api/leaveLobby', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          'state': this.state,
+          'socketId': socket.id
+        })
+      }).then(function (response) {
+        response.json().then(function (data) {
+          socket.emit('lobbyLeaveServer', data);
+        });
+      });
     }
   }, {
     key: 'render',
     value: function render() {
-      var userList = this.state.userNames.map(function (userName) {
+      var userList = this.state.players.map(function (player) {
         return _react2.default.createElement(
           'li',
-          { key: userName },
-          userName
+          { key: player.username },
+          player.username
         );
       });
       return _react2.default.createElement(
@@ -890,13 +995,13 @@ var Lobby = function (_React$Component) {
 exports.default = Lobby;
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports) {
 
 module.exports = require("socket.io-client");
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -915,13 +1020,15 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactSpeechRecognition = __webpack_require__(17);
+var _reactSpeechRecognition = __webpack_require__(18);
 
 var _reactSpeechRecognition2 = _interopRequireDefault(_reactSpeechRecognition);
 
 var _styledComponents = __webpack_require__(2);
 
 var _styledComponents2 = _interopRequireDefault(_styledComponents);
+
+var _Player = __webpack_require__(3);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -951,9 +1058,7 @@ var Game = function (_React$Component) {
 
         _this.state = {
             lobbyId: _this.props.match.params.id,
-            userNames: [],
-            userScores: [0, 0], // in order for a game to start, it can only have two players.
-            isCreator: false
+            players: []
         };
         return _this;
     }
@@ -965,7 +1070,7 @@ var Game = function (_React$Component) {
 
             // Update the local lobby with this user.
             this.setState({
-                userNames: passedState.userNames
+                players: passedState.players
             });
         }
     }, {
@@ -982,11 +1087,11 @@ var Game = function (_React$Component) {
             if (!browserSupportsSpeechRecognition) {
                 return null;
             }
-            var userList = this.state.userNames.map(function (userName) {
+            var userList = this.state.players.map(function (player) {
                 return _react2.default.createElement(
                     'li',
-                    { key: userName },
-                    userName,
+                    { key: player.username },
+                    player.username,
                     ': 0'
                 );
             });
@@ -1063,13 +1168,13 @@ var Game = function (_React$Component) {
 exports.default = (0, _reactSpeechRecognition2.default)(options)(Game);
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports) {
 
 module.exports = require("react-speech-recognition");
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1216,7 +1321,7 @@ var Grid = function (_Component) {
 exports.default = Grid;
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1227,7 +1332,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.fetchPopularRepos = fetchPopularRepos;
 
-var _isomorphicFetch = __webpack_require__(20);
+var _isomorphicFetch = __webpack_require__(21);
 
 var _isomorphicFetch2 = _interopRequireDefault(_isomorphicFetch);
 
@@ -1249,13 +1354,13 @@ function fetchPopularRepos() {
 }
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports) {
 
 module.exports = require("isomorphic-fetch");
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1281,31 +1386,31 @@ function NoMatch() {
 }
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports) {
 
 module.exports = require("http");
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports) {
 
 module.exports = require("socket.io");
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports) {
 
 module.exports = {"mongoURI":"mongodb://root:root123@ds231133.mlab.com:31133/tonguetwisterracer"}
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Game = __webpack_require__(26);
+var Game = __webpack_require__(27);
 
 // Create and Save a new Game 
 exports.create = function (req, res) {
@@ -1319,7 +1424,7 @@ exports.create = function (req, res) {
     // Create a Game 
     var game = new Game({
         lobbyId: req.body.state.lobbyId,
-        userNames: req.body.state.userNames
+        players: req.body.state.players
     });
 
     // Save Game in the database
@@ -1332,34 +1437,52 @@ exports.create = function (req, res) {
     });
 };
 
-// Update a game lobby identified by the lobbyId in the request
-exports.update = function (req, res) {
+// Join a game lobby identified by the lobbyId in the request
+exports.join = function (req, res) {
     // First find by lobbyId.
     Game.findOne({ lobbyId: req.body.state.lobbyId }, function (err, doc) {
-        // Get the actual documentId to update with the userNames from the document attributes.
-        Game.findByIdAndUpdate(doc['_id'], { $set: { userNames: doc['userNames'].concat(req.body.state.userNames) } }, { new: true }, function (err, result) {
+        // Get the actual documentId to update with the players list from the document attributes.
+        Game.findByIdAndUpdate(doc['_id'], { $set: { players: doc['players'].concat(req.body.state.players) } }, { new: true }, function (err, result) {
             res.json({
                 'lobbyId': result['lobbyId'],
-                'userNames': result['userNames']
+                'players': result['players']
+            });
+        });
+    });
+};
+
+// Leaves a game lobby identified by the lobbyId in the request
+exports.leave = function (req, res) {
+    // First find by lobbyId.
+    Game.findOne({ lobbyId: req.body.state.lobbyId }, function (err, doc) {
+        // Get the actual documentId to update with the players list from the document attributes.
+        Game.findByIdAndUpdate(doc['_id'], {
+            $pull: { 'players': {
+                    'UID': req.body.socketId
+                }
+            }
+        }, { 'new': true }, function (err, result) {
+            res.json({
+                'lobbyId': result['lobbyId'],
+                'players': result['players']
             });
         });
     });
 };
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var mongoose = __webpack_require__(4);
+var mongoose = __webpack_require__(5);
 
 // Basic Game Schema, might change later.
 var GameSchema = mongoose.Schema({
     lobbyId: { type: String, required: true },
-    userNames: { type: Array, "default": [] },
-    userScores: { type: Array, "default": [] }
+    players: { type: Object, "default": [] }
 });
 
 module.exports = mongoose.model('Game', GameSchema);

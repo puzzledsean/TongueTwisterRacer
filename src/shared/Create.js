@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
+import { Player } from './Player';
 
 const Button = styled.button`
   background: ${props => props.primary ? "palevioletred" : "white"};
@@ -22,37 +23,50 @@ class Create extends React.Component {
     super(props);
     this.state = {
       lobbyId: NaN, 
-      userName: NaN,
+      currentPlayer: NaN,
       isCreator: true,
     }
 
-    this.handleUserName = this.handleUserName.bind(this);
+    this.handleCurrentPlayer = this.handleCurrentPlayer.bind(this);
   }
 
   componentDidMount () {
     this.setState(() => ({
-      lobbyId: this.genLobbyID() 
+      lobbyId: this.genLobbyID(),
     }))
   }
 
-  handleUserName(event) {
-    this.setState({userName: event.target.value});
+  handleCurrentPlayer(event) {
+    var UID = this.genUID()
+    this.setState({
+      currentPlayer: new Player(event.target.value, 0, UID)
+    });
   }
 
   genLobbyID() {
     // Credit: https://gist.github.com/gordonbrander/2230317
     return Math.random().toString(36).substr(2, 6);
   };
+  
+  genUID() {
+    // Credit: https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
+    function s4() {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    }
+    return s4() + s4() + '-' + s4();
+  }
 
   render() {
     return (
-        <Container>
+       <Container>
           <h1>
           Create a game
           </h1>
           Enter your name 
           <br/>
-          <input type="text" name="userName" onChange={this.handleUserName}></input>
+          <input type="text" name="currentPlayer" onChange={this.handleCurrentPlayer}></input>
 
           <br/>
           <Link to={'/'}>
