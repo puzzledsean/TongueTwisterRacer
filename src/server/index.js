@@ -50,6 +50,12 @@ io.on("connection", socket => {
     // Tell all socket connections someone has started the game.
     io.emit('startGameClient')
   })
+
+  // Handle when a user has gotten finished a tongue twister/updated their score.
+  socket.on('scoreUpdatedToServer', function(data) {
+    // Tell all socket connections someone has updated their score.
+    io.emit('scoreUpdatedToClient', data)
+  })
 });
 
 const game = require('./controllers/GameController.js');
@@ -62,6 +68,9 @@ app.post("/api/joinLobby", game.join)
 
 // Leaves a lobby in MongoDB.
 app.post("/api/leaveLobby", game.leave)
+
+// Leaves a lobby in MongoDB.
+app.post("/api/updateScoreboard", game.updateScoreboard);
 
 app.get("*", (req, res, next) => {
   const activeRoute = routes.find((route) => matchPath(req.url, route)) || {}
@@ -96,13 +105,7 @@ app.get("*", (req, res, next) => {
   }).catch(next)
 })
 
-server.listen(3000, () => {
-  console.log(`Server is listening on port: 3000`)
+var server_port = process.env.PORT || 3000
+server.listen(server_port, () => {
+  console.log('Server has started listening on port: ' + server_port);
 })
-
-/*
-  1) Just get shared App rendering to string on server then taking over on client.
-  2) Pass data to <App /> on server. Show diff. Add data to window then pick it up on the client too.
-  3) Instead of static data move to dynamic data (github gists)
-  4) add in routing.
-*/

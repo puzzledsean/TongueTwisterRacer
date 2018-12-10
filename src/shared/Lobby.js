@@ -29,6 +29,7 @@ class Lobby extends React.Component {
       lobbyId: this.props.match.params.id,
       players: [],
       isCreator: false,
+      sessionId: NaN,
     }
     this.leaveGame = this.leaveGame.bind(this);
   }
@@ -37,13 +38,15 @@ class Lobby extends React.Component {
     var passedState = this.props.location.state;
     var currentPlayer = passedState.currentPlayer;
 
-    // Player's UID is the socket id
-    currentPlayer.setUID(socket.id);
+    // Generate session for Player's UID 
+    var userSessionId = this.genUserSessionID();
+    currentPlayer.setUID(userSessionId);
 
     // Update the local lobby with this user.
     this.setState({
         players: this.state.players.concat(currentPlayer),
         isCreator: passedState.isCreator,
+        sessionId: userSessionId,
     }, () => {
       // Either create a new lobby in db or update the lobby in db.
       if(this.state.isCreator) {
@@ -111,13 +114,23 @@ class Lobby extends React.Component {
       },
       body: JSON.stringify({
         'state': this.state,
-        'socketId' : socket.id,
       })
     }).then(response => {
       response.json().then(data => {
         socket.emit('lobbyLeaveServer', data);
       })
     })
+  }
+
+  // Generate a session ID/UID for the user.
+  genUserSessionID() {
+    // Credit: https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
+    function s4() {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    }
+    return s4() + s4() + '-' + s4();
   }
 
   render() {

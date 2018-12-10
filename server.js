@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "/";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 6);
+/******/ 	return __webpack_require__(__webpack_require__.s = 7);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -126,31 +126,25 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _Home = __webpack_require__(12);
+var _Home = __webpack_require__(13);
 
 var _Home2 = _interopRequireDefault(_Home);
 
-var _Join = __webpack_require__(13);
+var _Join = __webpack_require__(14);
 
 var _Join2 = _interopRequireDefault(_Join);
 
-var _Create = __webpack_require__(14);
+var _Create = __webpack_require__(15);
 
 var _Create2 = _interopRequireDefault(_Create);
 
-var _Lobby = __webpack_require__(15);
+var _Lobby = __webpack_require__(16);
 
 var _Lobby2 = _interopRequireDefault(_Lobby);
 
 var _Game = __webpack_require__(17);
 
 var _Game2 = _interopRequireDefault(_Game);
-
-var _Grid = __webpack_require__(19);
-
-var _Grid2 = _interopRequireDefault(_Grid);
-
-var _api = __webpack_require__(20);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -172,13 +166,6 @@ var routes = [{
 }, {
   path: '/game/:id',
   component: _Game2.default
-}, {
-  path: '/popular/:id',
-  component: _Grid2.default,
-  fetchInitialData: function fetchInitialData() {
-    var path = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
-    return (0, _api.fetchPopularRepos)(path.split('/').pop());
-  }
 }];
 
 exports.default = routes;
@@ -187,20 +174,26 @@ exports.default = routes;
 /* 5 */
 /***/ (function(module, exports) {
 
-module.exports = require("mongoose");
+module.exports = require("socket.io-client");
 
 /***/ }),
 /* 6 */
+/***/ (function(module, exports) {
+
+module.exports = require("mongoose");
+
+/***/ }),
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _express = __webpack_require__(7);
+var _express = __webpack_require__(8);
 
 var _express2 = _interopRequireDefault(_express);
 
-var _cors = __webpack_require__(8);
+var _cors = __webpack_require__(9);
 
 var _cors2 = _interopRequireDefault(_cors);
 
@@ -208,15 +201,15 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _server = __webpack_require__(9);
+var _server = __webpack_require__(10);
 
 var _reactRouterDom = __webpack_require__(1);
 
-var _serializeJavascript = __webpack_require__(10);
+var _serializeJavascript = __webpack_require__(11);
 
 var _serializeJavascript2 = _interopRequireDefault(_serializeJavascript);
 
-var _App = __webpack_require__(11);
+var _App = __webpack_require__(12);
 
 var _App2 = _interopRequireDefault(_App);
 
@@ -227,12 +220,12 @@ var _routes2 = _interopRequireDefault(_routes);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var app = (0, _express2.default)();
-var http = __webpack_require__(23);
-var socketIo = __webpack_require__(24);
-var db = __webpack_require__(25)['mongoURI'];
+var http = __webpack_require__(20);
+var socketIo = __webpack_require__(21);
+var db = __webpack_require__(22)['mongoURI'];
 
 // Set up database to MLab
-var mongoose = __webpack_require__(5);
+var mongoose = __webpack_require__(6);
 mongoose.connect(db).then(function () {
   return console.log('MongoDB connected...');
 }).catch(function (err) {
@@ -272,9 +265,15 @@ io.on("connection", function (socket) {
     // Tell all socket connections someone has started the game.
     io.emit('startGameClient');
   });
+
+  // Handle when a user has gotten finished a tongue twister/updated their score.
+  socket.on('scoreUpdatedToServer', function (data) {
+    // Tell all socket connections someone has updated their score.
+    io.emit('scoreUpdatedToClient', data);
+  });
 });
 
-var game = __webpack_require__(26);
+var game = __webpack_require__(23);
 
 // Creates a lobby in MongoDB.
 app.post("/api/createLobby", game.create);
@@ -284,6 +283,9 @@ app.post("/api/joinLobby", game.join);
 
 // Leaves a lobby in MongoDB.
 app.post("/api/leaveLobby", game.leave);
+
+// Leaves a lobby in MongoDB.
+app.post("/api/updateScoreboard", game.updateScoreboard);
 
 app.get("*", function (req, res, next) {
   var activeRoute = _routes2.default.find(function (route) {
@@ -305,43 +307,37 @@ app.get("*", function (req, res, next) {
   }).catch(next);
 });
 
-server.listen(3000, function () {
-  console.log("Server is listening on port: 3000");
+var server_port = process.env.PORT || 3000;
+server.listen(server_port, function () {
+  console.log('Server has started listening on port: ' + server_port);
 });
-
-/*
-  1) Just get shared App rendering to string on server then taking over on client.
-  2) Pass data to <App /> on server. Show diff. Add data to window then pick it up on the client too.
-  3) Instead of static data move to dynamic data (github gists)
-  4) add in routing.
-*/
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports) {
-
-module.exports = require("express");
 
 /***/ }),
 /* 8 */
 /***/ (function(module, exports) {
 
-module.exports = require("cors");
+module.exports = require("express");
 
 /***/ }),
 /* 9 */
 /***/ (function(module, exports) {
 
-module.exports = require("react-dom/server");
+module.exports = require("cors");
 
 /***/ }),
 /* 10 */
 /***/ (function(module, exports) {
 
-module.exports = require("serialize-javascript");
+module.exports = require("react-dom/server");
 
 /***/ }),
 /* 11 */
+/***/ (function(module, exports) {
+
+module.exports = require("serialize-javascript");
+
+/***/ }),
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -365,7 +361,7 @@ var _routes2 = _interopRequireDefault(_routes);
 
 var _reactRouterDom = __webpack_require__(1);
 
-var _NoMatch = __webpack_require__(22);
+var _NoMatch = __webpack_require__(19);
 
 var _NoMatch2 = _interopRequireDefault(_NoMatch);
 
@@ -421,7 +417,7 @@ var App = function (_Component) {
 exports.default = App;
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -485,7 +481,7 @@ function Home() {
 }
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -616,7 +612,7 @@ var Join = function (_React$Component) {
 exports.default = Join;
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -749,7 +745,7 @@ var Create = function (_React$Component) {
 exports.default = Create;
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -768,7 +764,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _socket = __webpack_require__(16);
+var _socket = __webpack_require__(5);
 
 var _socket2 = _interopRequireDefault(_socket);
 
@@ -811,7 +807,8 @@ var Lobby = function (_React$Component) {
     _this.state = {
       lobbyId: _this.props.match.params.id,
       players: [],
-      isCreator: false
+      isCreator: false,
+      sessionId: NaN
     };
     _this.leaveGame = _this.leaveGame.bind(_this);
     return _this;
@@ -825,13 +822,15 @@ var Lobby = function (_React$Component) {
       var passedState = this.props.location.state;
       var currentPlayer = passedState.currentPlayer;
 
-      // Player's UID is the socket id
-      currentPlayer.setUID(socket.id);
+      // Generate session for Player's UID 
+      var userSessionId = this.genUserSessionID();
+      currentPlayer.setUID(userSessionId);
 
       // Update the local lobby with this user.
       this.setState({
         players: this.state.players.concat(currentPlayer),
-        isCreator: passedState.isCreator
+        isCreator: passedState.isCreator,
+        sessionId: userSessionId
       }, function () {
         // Either create a new lobby in db or update the lobby in db.
         if (_this2.state.isCreator) {
@@ -900,14 +899,25 @@ var Lobby = function (_React$Component) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          'state': this.state,
-          'socketId': socket.id
+          'state': this.state
         })
       }).then(function (response) {
         response.json().then(function (data) {
           socket.emit('lobbyLeaveServer', data);
         });
       });
+    }
+
+    // Generate a session ID/UID for the user.
+
+  }, {
+    key: 'genUserSessionID',
+    value: function genUserSessionID() {
+      // Credit: https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
+      function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+      }
+      return s4() + s4() + '-' + s4();
     }
   }, {
     key: 'render',
@@ -975,12 +985,6 @@ var Lobby = function (_React$Component) {
 exports.default = Lobby;
 
 /***/ }),
-/* 16 */
-/***/ (function(module, exports) {
-
-module.exports = require("socket.io-client");
-
-/***/ }),
 /* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1008,7 +1012,7 @@ var _styledComponents = __webpack_require__(2);
 
 var _styledComponents2 = _interopRequireDefault(_styledComponents);
 
-var _socket = __webpack_require__(16);
+var _socket = __webpack_require__(5);
 
 var _socket2 = _interopRequireDefault(_socket);
 
@@ -1046,7 +1050,8 @@ var Game = function (_React$Component) {
 
     _this.state = {
       lobbyId: _this.props.match.params.id,
-      players: []
+      players: [],
+      sessionId: NaN
     };
     _this.updateScore = _this.updateScore.bind(_this);
     return _this;
@@ -1055,11 +1060,21 @@ var Game = function (_React$Component) {
   _createClass(Game, [{
     key: 'componentDidMount',
     value: function componentDidMount() {
+      var _this2 = this;
+
       var passedState = this.props.location.state;
 
       // Update the local lobby with this user.
       this.setState({
-        players: passedState.players
+        players: passedState.players,
+        sessionId: passedState.sessionId
+      });
+
+      // Update scores.
+      socket.on('scoreUpdatedToClient', function (data) {
+        _this2.setState({
+          players: data.players
+        });
       });
     }
   }, {
@@ -1108,20 +1123,37 @@ var Game = function (_React$Component) {
 
       // Low levenshtein score means user got a really good score (inverse relationship). 
       var score = currentTTStripped.length - levenshteinScore;
+      if (score < 0) {
+        score = 0;
+      }
 
-      alert('Your score: ' + score);
+      fetch(SERVER_ENDPOINT + '/api/updateScoreboard', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          'state': this.state,
+          'score': score
+        })
+      }).then(function (response) {
+        response.json().then(function (data) {
+          socket.emit('scoreUpdatedToServer', data);
+        });
+      });
     }
   }, {
     key: 'render',
     value: function render() {
-      var _this2 = this;
+      var _this3 = this;
 
       var _props = this.props,
           transcript = _props.transcript,
           resetTranscript = _props.resetTranscript,
           browserSupportsSpeechRecognition = _props.browserSupportsSpeechRecognition,
           startListening = _props.startListening,
-          stopListening = _props.stopListening;
+          abortListening = _props.abortListening;
 
 
       if (!browserSupportsSpeechRecognition) {
@@ -1132,7 +1164,8 @@ var Game = function (_React$Component) {
           'li',
           { key: player.username },
           player.username,
-          ': 0'
+          ': ',
+          player.score
         );
       });
 
@@ -1169,7 +1202,7 @@ var Game = function (_React$Component) {
         _react2.default.createElement(
           'h4',
           null,
-          'First to 50 points wins!'
+          'First to 300 points wins!'
         ),
         userList,
         _react2.default.createElement('br', null),
@@ -1197,7 +1230,7 @@ var Game = function (_React$Component) {
         _react2.default.createElement(
           Button,
           { onClick: function onClick() {
-              stopListening();_this2.updateScore(transcript, currentTT);resetTranscript();
+              resetTranscript();abortListening();_this3.updateScore(transcript, currentTT);
             } },
           'Stop Recording and Submit'
         ),
@@ -1227,192 +1260,6 @@ module.exports = require("react-speech-recognition");
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = __webpack_require__(0);
-
-var _react2 = _interopRequireDefault(_react);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var Grid = function (_Component) {
-  _inherits(Grid, _Component);
-
-  function Grid(props) {
-    _classCallCheck(this, Grid);
-
-    var _this = _possibleConstructorReturn(this, (Grid.__proto__ || Object.getPrototypeOf(Grid)).call(this, props));
-
-    var repos = void 0;
-    if (false) {
-      repos = window.__INITIAL_DATA__;
-      delete window.__INITIAL_DATA__;
-    } else {
-      repos = _this.props.staticContext.data;
-    }
-
-    _this.state = {
-      repos: repos,
-      loading: repos ? false : true
-    };
-
-    _this.fetchRepos = _this.fetchRepos.bind(_this);
-    return _this;
-  }
-
-  _createClass(Grid, [{
-    key: 'componentDidMount',
-    value: function componentDidMount() {
-      if (!this.state.repos) {
-        this.fetchRepos(this.props.match.params.id);
-      }
-    }
-  }, {
-    key: 'componentDidUpdate',
-    value: function componentDidUpdate(prevProps, prevState) {
-      if (prevProps.match.params.id !== this.props.match.params.id) {
-        this.fetchRepos(this.props.match.params.id);
-      }
-    }
-  }, {
-    key: 'fetchRepos',
-    value: function fetchRepos(lang) {
-      var _this2 = this;
-
-      this.setState(function () {
-        return {
-          loading: true
-        };
-      });
-
-      this.props.fetchInitialData(lang).then(function (repos) {
-        return _this2.setState(function () {
-          return {
-            repos: repos,
-            loading: false
-          };
-        });
-      });
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-      var _state = this.state,
-          loading = _state.loading,
-          repos = _state.repos;
-
-
-      if (loading === true) {
-        return _react2.default.createElement(
-          'p',
-          null,
-          'LOADING'
-        );
-      }
-
-      return _react2.default.createElement(
-        'ul',
-        { style: { display: 'flex', flexWrap: 'wrap' } },
-        repos.map(function (_ref) {
-          var name = _ref.name,
-              owner = _ref.owner,
-              stargazers_count = _ref.stargazers_count,
-              html_url = _ref.html_url;
-          return _react2.default.createElement(
-            'li',
-            { key: name, style: { margin: 30 } },
-            _react2.default.createElement(
-              'ul',
-              null,
-              _react2.default.createElement(
-                'li',
-                null,
-                _react2.default.createElement(
-                  'a',
-                  { href: html_url },
-                  name
-                )
-              ),
-              _react2.default.createElement(
-                'li',
-                null,
-                '@',
-                owner.login
-              ),
-              _react2.default.createElement(
-                'li',
-                null,
-                stargazers_count,
-                ' stars'
-              )
-            )
-          );
-        })
-      );
-    }
-  }]);
-
-  return Grid;
-}(_react.Component);
-
-exports.default = Grid;
-
-/***/ }),
-/* 20 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.fetchPopularRepos = fetchPopularRepos;
-
-var _isomorphicFetch = __webpack_require__(21);
-
-var _isomorphicFetch2 = _interopRequireDefault(_isomorphicFetch);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function fetchPopularRepos() {
-  var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'all';
-
-  var encodedURI = encodeURI('https://api.github.com/search/repositories?q=stars:>1+language:' + language + '&sort=stars&order=desc&type=Repositories');
-
-  return (0, _isomorphicFetch2.default)(encodedURI).then(function (data) {
-    return data.json();
-  }).then(function (repos) {
-    return repos.items;
-  }).catch(function (error) {
-    console.warn(error);
-    return null;
-  });
-}
-
-/***/ }),
-/* 21 */
-/***/ (function(module, exports) {
-
-module.exports = require("isomorphic-fetch");
-
-/***/ }),
-/* 22 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
 exports.default = NoMatch;
 
 var _react = __webpack_require__(0);
@@ -1430,31 +1277,31 @@ function NoMatch() {
 }
 
 /***/ }),
-/* 23 */
+/* 20 */
 /***/ (function(module, exports) {
 
 module.exports = require("http");
 
 /***/ }),
-/* 24 */
+/* 21 */
 /***/ (function(module, exports) {
 
 module.exports = require("socket.io");
 
 /***/ }),
-/* 25 */
+/* 22 */
 /***/ (function(module, exports) {
 
 module.exports = {"mongoURI":"mongodb://root:root123@ds231133.mlab.com:31133/tonguetwisterracer"}
 
 /***/ }),
-/* 26 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Game = __webpack_require__(27);
+var Game = __webpack_require__(24);
 
 // Create and Save a new Game 
 exports.create = function (req, res) {
@@ -1502,7 +1349,7 @@ exports.leave = function (req, res) {
         // Get the actual documentId to update with the players list from the document attributes.
         Game.findByIdAndUpdate(doc['_id'], {
             $pull: { 'players': {
-                    'UID': req.body.socketId
+                    'UID': req.body.state.sessionId
                 }
             }
         }, { 'new': true }, function (err, result) {
@@ -1514,14 +1361,30 @@ exports.leave = function (req, res) {
     });
 };
 
+// Leaves a game lobby identified by the lobbyId in the request
+exports.updateScoreboard = function (req, res) {
+    // First find the proper Game by lobbyId.
+    Game.findOneAndUpdate({ lobbyId: req.body.state.lobbyId, 'players.UID': req.body.state.sessionId }, { $inc: { "players.$.score": req.body.score } }, // increment the user's score 
+    { 'new': true }, function (err, result) {
+        if (err) {
+            console.log('error', err);
+        } else {
+            res.json({
+                'lobbyId': result['lobbyId'],
+                'players': result['players']
+            });
+        }
+    });
+};
+
 /***/ }),
-/* 27 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var mongoose = __webpack_require__(5);
+var mongoose = __webpack_require__(6);
 
 // Basic Game Schema, might change later.
 var GameSchema = mongoose.Schema({

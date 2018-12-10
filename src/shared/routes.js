@@ -3,8 +3,6 @@ import Join from './Join'
 import Create from './Create'
 import Lobby from './Lobby'
 import Game from './Game'
-import Grid from './Grid'
-import { fetchPopularRepos } from './api'
 
 const routes =  [
   {
@@ -30,11 +28,6 @@ const routes =  [
     path: '/game/:id',
     component: Game,
   },
-  {
-    path: '/popular/:id',
-    component: Grid,
-    fetchInitialData: (path = '') => fetchPopularRepos(path.split('/').pop())
-  }
 ]
 
 export default routes

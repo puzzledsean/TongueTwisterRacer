@@ -33,6 +33,7 @@ class Game extends React.Component {
       this.state = {
         lobbyId: this.props.match.params.id,
         players: [],
+        sessionId: NaN,
       }
       this.updateScore = this.updateScore.bind(this);
     }
@@ -42,7 +43,15 @@ class Game extends React.Component {
   
       // Update the local lobby with this user.
       this.setState({
-          players : passedState.players
+          players : passedState.players,
+          sessionId: passedState.sessionId,
+      })
+
+      // Update scores.
+      socket.on('scoreUpdatedToClient', (data) => {
+        this.setState({
+          players: data.players,
+        })
       })
     }
 
@@ -89,18 +98,35 @@ class Game extends React.Component {
 
         // Low levenshtein score means user got a really good score (inverse relationship). 
         var score = currentTTStripped.length - levenshteinScore
+        if(score < 0) {
+          score = 0;
+        }
 
-        alert('Your score: ' + score)
+        fetch(SERVER_ENDPOINT + '/api/updateScoreboard', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            'state': this.state,
+            'score': score, 
+          })
+        }).then(response => {
+          response.json().then(data => {
+            socket.emit('scoreUpdatedToServer', data);
+          })
+        });
     }
 
     render() {
-        const { transcript, resetTranscript, browserSupportsSpeechRecognition, startListening, stopListening } = this.props
+        const { transcript, resetTranscript, browserSupportsSpeechRecognition, startListening, abortListening } = this.props
 
         if (!browserSupportsSpeechRecognition) {
             return null
         }
         const userList = this.state.players.map((player) =>
-            <li key={player.username}>{player.username}: 0</li>
+            <li key={player.username}>{player.username}: {player.score}</li>
         );
 
         let userResponse;
@@ -121,7 +147,7 @@ class Game extends React.Component {
             <h2>
                 Scoreboard
             </h2>
-            <h4>First to 50 points wins!</h4>
+            <h4>First to 300 points wins!</h4>
             {userList}
             <br/>
 
@@ -134,7 +160,7 @@ class Game extends React.Component {
             <br/>
             <Button onClick={() => {resetTranscript(); startListening();}}>Record</Button>
             <br/>
-            <Button onClick={() => {stopListening(); this.updateScore(transcript, currentTT); resetTranscript();}}>Stop Recording and Submit</Button>
+            <Button onClick={() => {resetTranscript(); abortListening(); this.updateScore(transcript, currentTT); }}>Stop Recording and Submit</Button>
             <br/>
         </Container> 
         );
