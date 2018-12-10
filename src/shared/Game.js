@@ -27,15 +27,19 @@ const SERVER_ENDPOINT = "http://127.0.0.1:3000"
 // Establish a socket connection
 const socket = socketIOClient(SERVER_ENDPOINT);
 
+const MAX_SCORE = 300;
+
 class Game extends React.Component {
     constructor(props) {
       super(props);
       this.state = {
         lobbyId: this.props.match.params.id,
         players: [],
-        sessionId: NaN,
+        currentPlayerId: "",
         tonguetwisters: [],
         currTongueTwisterIndex: 0,
+        isUserWinner: false,
+        winningPlayer: {},
       }
       this.updateScore = this.updateScore.bind(this);
     }
@@ -46,7 +50,7 @@ class Game extends React.Component {
       // Update the local lobby with this user.
       this.setState({
           players : passedState.players,
-          sessionId: passedState.sessionId,
+          currentPlayerId: passedState.sessionId,
       })
 
       // Update scores.
@@ -54,6 +58,27 @@ class Game extends React.Component {
         this.setState({
           players: data.players,
         })
+        // Check if a player won.
+        for(var i = 0; i < data.players.length; i++) {
+          if(data.players[i].score > MAX_SCORE) {
+            socket.emit('gameOverServer', data.players[i])
+          }
+        }
+      })
+
+      // Someone won, determine if this user was winner or loser 
+      socket.on('gameOverClient', (data) => {
+        if(data.UID == this.state.currentPlayerId) {
+          this.setState({
+            isUserWinner: true,
+            winningPlayer: data
+          })
+        } else {
+          this.setState({
+            isUserWinner: false,
+            winningPlayer: data
+          })
+        }
       })
 
       // Fetch tongue twisters from server
@@ -115,10 +140,9 @@ class Game extends React.Component {
       var currentTTStripped = currentTT.split(' ').join('').replace(/[?.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").toLowerCase().repeat(repeatCount)
       
       var levenshteinScore = this.levenshtein(userResponseStripped, currentTTStripped)
-
       // Low levenshtein score means user got a really good score (inverse relationship). 
       var score = currentTTStripped.length - levenshteinScore
-      if(score < 0) {
+      if (score < 0) {
         score = 0;
       }
 
@@ -152,60 +176,91 @@ class Game extends React.Component {
         if (!browserSupportsSpeechRecognition) {
             return null
         }
-        const userList = this.state.players.map((player) =>
-            <li key={player.username}>{player.username}: {player.score}</li>
-        );
-
-        var userResponse;
-        if(transcript) {
-            userResponse = <div>{transcript}</div>
+        let gamePlay = this.buildGamePlayPage(transcript, resetTranscript, startListening, abortListening);
+        
+        let pageToDisplay;
+        // Check if a player has been determined to be the winner yet
+        if(Object.keys(this.state.winningPlayer).length === 0 && this.state.winningPlayer.constructor === Object) {
+          pageToDisplay = gamePlay;
         } else {
-            userResponse = <div>...</div>
-        }
-
-        let tongueTwisterPrompt;
-        var currentTT;
-        var repeatCount;
-        // Get the current tongue twister to show user.
-        if(this.state.tonguetwisters.length > 0) {
-          currentTT = this.state.tonguetwisters[this.state.currTongueTwisterIndex]['tonguetwister']
-          repeatCount = this.state.tonguetwisters[this.state.currTongueTwisterIndex]['repeat']
-          if(repeatCount == 1) {
-            tongueTwisterPrompt = currentTT;
+          if(this.state.isUserWinner) {
+            pageToDisplay = <h2>🎉Congrats {this.state.winningPlayer.username}, you won!🎉</h2>
           } else {
-            tongueTwisterPrompt = `${currentTT} (Repeat ${repeatCount} times)`;
+            pageToDisplay = <h2>Game over :( you lost to {this.state.winningPlayer.username}</h2>
           }
-        } else {
-          tongueTwisterPrompt = `Loading...`;
         }
 
         return (
-            <Container>
+          <Container>
             <h1>
             Tongue Twister Racer
             </h1>
 
-            <h2>
-                Scoreboard
-            </h2>
-            <h4>First to 300 points wins!</h4>
-            {userList}
-            <br/>
-
-            <h3>Prompt</h3>
-            {tongueTwisterPrompt}
-
-            <h3>Your response</h3>
-            {userResponse}
-
-            <br/>
-            <Button onClick={() => {resetTranscript(); startListening();}}>Record</Button>
-            <br/>
-            <Button onClick={() => {resetTranscript(); abortListening(); this.updateScore(transcript, currentTT, repeatCount); this.getNextTongueTwister(); }}>Stop Recording and Submit</Button>
-            <br/>
-        </Container> 
+            {pageToDisplay}
+          </Container> 
         );
     }
-}
+
+    /**
+     * Build out the JSX of the Gameplay page. Shows prompt, score, button to record, etc.
+     * @param {*} transcript 
+     * @param {*} resetTranscript 
+     * @param {*} startListening 
+     * @param {*} abortListening 
+     */
+    buildGamePlayPage(transcript, resetTranscript, startListening, abortListening) {
+      const userList = this.state.players.map((player) => <li key={player.username}>{player.username}: {player.score}</li>);
+
+      var userResponse;
+      if (transcript) {
+        userResponse = <div>{transcript}</div>;
+      }
+      else {
+        userResponse = <div>...</div>;
+      }
+
+      // Build a prompt from the current Tongue Twister and Repeat Count
+      let tongueTwisterPrompt;
+      var currentTT;
+      var repeatCount;
+      if (this.state.tonguetwisters.length > 0) {
+        currentTT = this.state.tonguetwisters[this.state.currTongueTwisterIndex]['tonguetwister'];
+        repeatCount = this.state.tonguetwisters[this.state.currTongueTwisterIndex]['repeat'];
+        if (repeatCount == 1) {
+          tongueTwisterPrompt = currentTT;
+        }
+        else {
+          tongueTwisterPrompt = `${currentTT} (Repeat ${repeatCount} times)`;
+        }
+      }
+      else {
+        tongueTwisterPrompt = `Loading...`;
+      }
+
+      // Wrap everything in a div to return as a JSX element.
+      let gamePlay = 
+      <div>
+        <h2>
+          Scoreboard
+        </h2>
+        <h4>First to {MAX_SCORE} points wins!</h4>
+        {userList}
+        <br/>
+
+        <h3>Prompt</h3>
+        {tongueTwisterPrompt}
+
+        <h3>Your response</h3>
+        {userResponse}
+
+        <br />
+        <Button onClick={() => { resetTranscript(); startListening(); } }>Record</Button>
+        <br />
+        <Button onClick={() => { resetTranscript(); abortListening(); this.updateScore(transcript, currentTT, repeatCount); this.getNextTongueTwister(); } }>Stop Recording and Submit</Button>
+        <br />
+      </div>;
+      return gamePlay;
+    }
+  }
 
 export default SpeechRecognition(options)(Game)

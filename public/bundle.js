@@ -25483,7 +25483,7 @@ var Lobby = function (_React$Component) {
       lobbyId: _this.props.match.params.id,
       players: [],
       isCreator: false,
-      sessionId: NaN
+      currentPlayerId: ""
     };
     _this.leaveGame = _this.leaveGame.bind(_this);
     return _this;
@@ -25498,14 +25498,14 @@ var Lobby = function (_React$Component) {
       var currentPlayer = passedState.currentPlayer;
 
       // Generate session for Player's UID 
-      var userSessionId = this.genUserSessionID();
-      currentPlayer.setUID(userSessionId);
+      var generatedPlayerId = this.genPlayerId();
+      currentPlayer.setUID(generatedPlayerId);
 
       // Update the local lobby with this user.
       this.setState({
         players: this.state.players.concat(currentPlayer),
         isCreator: passedState.isCreator,
-        sessionId: userSessionId
+        currPlayerId: generatedPlayerId
       }, function () {
         // Either create a new lobby in db or update the lobby in db.
         if (_this2.state.isCreator) {
@@ -25583,11 +25583,11 @@ var Lobby = function (_React$Component) {
       });
     }
 
-    // Generate a session ID/UID for the user.
+    // Generate a player ID/UID for the user.
 
   }, {
-    key: 'genUserSessionID',
-    value: function genUserSessionID() {
+    key: 'genPlayerId',
+    value: function genPlayerId() {
       // Credit: https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
       function s4() {
         return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
@@ -29446,6 +29446,7 @@ var options = {
 var SERVER_ENDPOINT = "http://127.0.0.1:3000";
 // Establish a socket connection
 var socket = (0, _socket2.default)(SERVER_ENDPOINT);
+var MAX_SCORE = 20;
 
 var Game = function (_React$Component) {
   _inherits(Game, _React$Component);
@@ -29458,9 +29459,11 @@ var Game = function (_React$Component) {
     _this.state = {
       lobbyId: _this.props.match.params.id,
       players: [],
-      sessionId: NaN,
+      currentPlayerId: "",
       tonguetwisters: [],
-      currTongueTwisterIndex: 0
+      currTongueTwisterIndex: 0,
+      isUserWinner: false,
+      winningPlayer: {}
     };
     _this.updateScore = _this.updateScore.bind(_this);
     return _this;
@@ -29476,7 +29479,7 @@ var Game = function (_React$Component) {
       // Update the local lobby with this user.
       this.setState({
         players: passedState.players,
-        sessionId: passedState.sessionId
+        currentPlayerId: passedState.sessionId
       });
 
       // Update scores.
@@ -29484,6 +29487,27 @@ var Game = function (_React$Component) {
         _this2.setState({
           players: data.players
         });
+        // Check if a player won.
+        for (var i = 0; i < data.players.length; i++) {
+          if (data.players[i].score > MAX_SCORE) {
+            socket.emit('gameOverServer', data.players[i]);
+          }
+        }
+      });
+
+      // Someone won, determine if this user was winner or loser 
+      socket.on('gameOverClient', function (data) {
+        if (data.UID == _this2.state.currentPlayerId) {
+          _this2.setState({
+            isUserWinner: true,
+            winningPlayer: data
+          });
+        } else {
+          _this2.setState({
+            isUserWinner: false,
+            winningPlayer: data
+          });
+        }
       });
 
       // Fetch tongue twisters from server
@@ -29547,7 +29571,6 @@ var Game = function (_React$Component) {
       var currentTTStripped = currentTT.split(' ').join('').replace(/[?.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").toLowerCase().repeat(repeatCount);
 
       var levenshteinScore = this.levenshtein(userResponseStripped, currentTTStripped);
-
       // Low levenshtein score means user got a really good score (inverse relationship). 
       var score = currentTTStripped.length - levenshteinScore;
       if (score < 0) {
@@ -29581,8 +29604,6 @@ var Game = function (_React$Component) {
   }, {
     key: 'render',
     value: function render() {
-      var _this3 = this;
-
       var _props = this.props,
           transcript = _props.transcript,
           resetTranscript = _props.resetTranscript,
@@ -29594,6 +29615,56 @@ var Game = function (_React$Component) {
       if (!browserSupportsSpeechRecognition) {
         return null;
       }
+      var gamePlay = this.buildGamePlayPage(transcript, resetTranscript, startListening, abortListening);
+
+      var pageToDisplay = void 0;
+      // Check if a player has been determined to be the winner yet
+      if (Object.keys(this.state.winningPlayer).length === 0 && this.state.winningPlayer.constructor === Object) {
+        pageToDisplay = gamePlay;
+      } else {
+        if (this.state.isUserWinner) {
+          pageToDisplay = _react2.default.createElement(
+            'h2',
+            null,
+            '\uD83C\uDF89Congrats ',
+            this.state.winningPlayer.username,
+            ', you won!\uD83C\uDF89'
+          );
+        } else {
+          pageToDisplay = _react2.default.createElement(
+            'h2',
+            null,
+            'Game over :( you lost to ',
+            this.state.winningPlayer.username
+          );
+        }
+      }
+
+      return _react2.default.createElement(
+        Container,
+        null,
+        _react2.default.createElement(
+          'h1',
+          null,
+          'Tongue Twister Racer'
+        ),
+        pageToDisplay
+      );
+    }
+
+    /**
+     * Build out the JSX of the Gameplay page. Shows prompt, score, button to record, etc.
+     * @param {*} transcript 
+     * @param {*} resetTranscript 
+     * @param {*} startListening 
+     * @param {*} abortListening 
+     */
+
+  }, {
+    key: 'buildGamePlayPage',
+    value: function buildGamePlayPage(transcript, resetTranscript, startListening, abortListening) {
+      var _this3 = this;
+
       var userList = this.state.players.map(function (player) {
         return _react2.default.createElement(
           'li',
@@ -29619,10 +29690,10 @@ var Game = function (_React$Component) {
         );
       }
 
+      // Build a prompt from the current Tongue Twister and Repeat Count
       var tongueTwisterPrompt = void 0;
       var currentTT;
       var repeatCount;
-      // Get the current tongue twister to show user.
       if (this.state.tonguetwisters.length > 0) {
         currentTT = this.state.tonguetwisters[this.state.currTongueTwisterIndex]['tonguetwister'];
         repeatCount = this.state.tonguetwisters[this.state.currTongueTwisterIndex]['repeat'];
@@ -29635,14 +29706,10 @@ var Game = function (_React$Component) {
         tongueTwisterPrompt = 'Loading...';
       }
 
-      return _react2.default.createElement(
-        Container,
+      // Wrap everything in a div to return as a JSX element.
+      var gamePlay = _react2.default.createElement(
+        'div',
         null,
-        _react2.default.createElement(
-          'h1',
-          null,
-          'Tongue Twister Racer'
-        ),
         _react2.default.createElement(
           'h2',
           null,
@@ -29651,7 +29718,9 @@ var Game = function (_React$Component) {
         _react2.default.createElement(
           'h4',
           null,
-          'First to 300 points wins!'
+          'First to ',
+          MAX_SCORE,
+          ' points wins!'
         ),
         userList,
         _react2.default.createElement('br', null),
@@ -29685,6 +29754,7 @@ var Game = function (_React$Component) {
         ),
         _react2.default.createElement('br', null)
       );
+      return gamePlay;
     }
   }]);
 

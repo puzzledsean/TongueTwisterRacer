@@ -59,6 +59,12 @@ io.on("connection", socket => {
     // Tell all socket connections someone has updated their score.
     io.emit('scoreUpdatedToClient', data)
   })
+
+  // Handle when a user has won the game
+  socket.on('gameOverServer', function(data) {
+    // Tell all socket connections someone has won.
+    io.emit('gameOverClient', data)
+  })
 });
 
 

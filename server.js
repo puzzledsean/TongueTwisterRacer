@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "/";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 8);
+/******/ 	return __webpack_require__(__webpack_require__.s = 7);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -117,6 +117,12 @@ var Player = exports.Player = function () {
 
 /***/ }),
 /* 4 */
+/***/ (function(module, exports) {
+
+module.exports = require("mongoose");
+
+/***/ }),
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -126,23 +132,23 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _Home = __webpack_require__(14);
+var _Home = __webpack_require__(13);
 
 var _Home2 = _interopRequireDefault(_Home);
 
-var _Join = __webpack_require__(15);
+var _Join = __webpack_require__(14);
 
 var _Join2 = _interopRequireDefault(_Join);
 
-var _Create = __webpack_require__(16);
+var _Create = __webpack_require__(15);
 
 var _Create2 = _interopRequireDefault(_Create);
 
-var _Lobby = __webpack_require__(17);
+var _Lobby = __webpack_require__(16);
 
 var _Lobby2 = _interopRequireDefault(_Lobby);
 
-var _Game = __webpack_require__(18);
+var _Game = __webpack_require__(17);
 
 var _Game2 = _interopRequireDefault(_Game);
 
@@ -171,112 +177,23 @@ var routes = [{
 exports.default = routes;
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports) {
 
 module.exports = require("socket.io-client");
 
 /***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var Game = __webpack_require__(24);
-
-// Create and Save a new Game 
-exports.create = function (req, res) {
-    // Validate request
-    if (!req.body.state) {
-        return res.status(400).send(JSON.stringify({
-            message: "Body can not be empty"
-        }));
-    }
-
-    // Create a Game 
-    var game = new Game({
-        lobbyId: req.body.state.lobbyId,
-        players: req.body.state.players
-    });
-
-    // Save Game in the database
-    game.save().then(function (data) {
-        res.json(data);
-    }).catch(function (err) {
-        res.status(500).send({
-            message: err.message || "Some error occurred while creating the Game."
-        });
-    });
-};
-
-// Join a game lobby identified by the lobbyId in the request
-exports.join = function (req, res) {
-    // First find by lobbyId.
-    Game.findOne({ lobbyId: req.body.state.lobbyId }, function (err, doc) {
-        // Get the actual documentId to update with the players list from the document attributes.
-        Game.findByIdAndUpdate(doc['_id'], { $set: { players: doc['players'].concat(req.body.state.players) } }, { new: true }, function (err, result) {
-            res.json({
-                'lobbyId': result['lobbyId'],
-                'players': result['players']
-            });
-        });
-    });
-};
-
-// Leaves a game lobby identified by the lobbyId in the request
-exports.leave = function (req, res) {
-    // First find by lobbyId.
-    Game.findOne({ lobbyId: req.body.state.lobbyId }, function (err, doc) {
-        // Get the actual documentId to update with the players list from the document attributes.
-        Game.findByIdAndUpdate(doc['_id'], {
-            $pull: { 'players': {
-                    'UID': req.body.state.sessionId
-                }
-            }
-        }, { 'new': true }, function (err, result) {
-            res.json({
-                'lobbyId': result['lobbyId'],
-                'players': result['players']
-            });
-        });
-    });
-};
-
-// Leaves a game lobby identified by the lobbyId in the request
-exports.updateScoreboard = function (req, res) {
-    // First find the proper Game by lobbyId.
-    Game.findOneAndUpdate({ lobbyId: req.body.state.lobbyId, 'players.UID': req.body.state.sessionId }, { $inc: { "players.$.score": req.body.score } }, // increment the user's score 
-    { 'new': true }, function (err, result) {
-        if (err) {
-            console.log('error', err);
-        } else {
-            res.json({
-                'lobbyId': result['lobbyId'],
-                'players': result['players']
-            });
-        }
-    });
-};
-
-/***/ }),
 /* 7 */
-/***/ (function(module, exports) {
-
-module.exports = require("mongoose");
-
-/***/ }),
-/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _express = __webpack_require__(9);
+var _express = __webpack_require__(8);
 
 var _express2 = _interopRequireDefault(_express);
 
-var _cors = __webpack_require__(10);
+var _cors = __webpack_require__(9);
 
 var _cors2 = _interopRequireDefault(_cors);
 
@@ -284,34 +201,34 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _server = __webpack_require__(11);
+var _server = __webpack_require__(10);
 
 var _reactRouterDom = __webpack_require__(1);
 
-var _serializeJavascript = __webpack_require__(12);
+var _serializeJavascript = __webpack_require__(11);
 
 var _serializeJavascript2 = _interopRequireDefault(_serializeJavascript);
 
-var _App = __webpack_require__(13);
+var _App = __webpack_require__(12);
 
 var _App2 = _interopRequireDefault(_App);
 
-var _routes = __webpack_require__(4);
+var _routes = __webpack_require__(5);
 
 var _routes2 = _interopRequireDefault(_routes);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var app = (0, _express2.default)();
-var http = __webpack_require__(21);
-var socketIo = __webpack_require__(22);
-var db = __webpack_require__(23)['mongoURI'];
+var http = __webpack_require__(20);
+var socketIo = __webpack_require__(21);
+var db = __webpack_require__(22)['mongoURI'];
 
-var game = __webpack_require__(6);
+var game = __webpack_require__(23);
 var tonguetwisters = __webpack_require__(25);
 
 // Set up database to MLab
-var mongoose = __webpack_require__(7);
+var mongoose = __webpack_require__(4);
 mongoose.connect(db).then(function () {
   return console.log('MongoDB connected...');
 }).catch(function (err) {
@@ -357,6 +274,12 @@ io.on("connection", function (socket) {
     // Tell all socket connections someone has updated their score.
     io.emit('scoreUpdatedToClient', data);
   });
+
+  // Handle when a user has won the game
+  socket.on('gameOverServer', function (data) {
+    // Tell all socket connections someone has won.
+    io.emit('gameOverClient', data);
+  });
 });
 
 // Get a list of tongue twisters from MongoDB.
@@ -400,31 +323,31 @@ server.listen(server_port, function () {
 });
 
 /***/ }),
-/* 9 */
+/* 8 */
 /***/ (function(module, exports) {
 
 module.exports = require("express");
 
 /***/ }),
-/* 10 */
+/* 9 */
 /***/ (function(module, exports) {
 
 module.exports = require("cors");
 
 /***/ }),
-/* 11 */
+/* 10 */
 /***/ (function(module, exports) {
 
 module.exports = require("react-dom/server");
 
 /***/ }),
-/* 12 */
+/* 11 */
 /***/ (function(module, exports) {
 
 module.exports = require("serialize-javascript");
 
 /***/ }),
-/* 13 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -442,13 +365,13 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _routes = __webpack_require__(4);
+var _routes = __webpack_require__(5);
 
 var _routes2 = _interopRequireDefault(_routes);
 
 var _reactRouterDom = __webpack_require__(1);
 
-var _NoMatch = __webpack_require__(20);
+var _NoMatch = __webpack_require__(19);
 
 var _NoMatch2 = _interopRequireDefault(_NoMatch);
 
@@ -504,7 +427,7 @@ var App = function (_Component) {
 exports.default = App;
 
 /***/ }),
-/* 14 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -568,7 +491,7 @@ function Home() {
 }
 
 /***/ }),
-/* 15 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -699,7 +622,7 @@ var Join = function (_React$Component) {
 exports.default = Join;
 
 /***/ }),
-/* 16 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -832,7 +755,7 @@ var Create = function (_React$Component) {
 exports.default = Create;
 
 /***/ }),
-/* 17 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -851,7 +774,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _socket = __webpack_require__(5);
+var _socket = __webpack_require__(6);
 
 var _socket2 = _interopRequireDefault(_socket);
 
@@ -895,7 +818,7 @@ var Lobby = function (_React$Component) {
       lobbyId: _this.props.match.params.id,
       players: [],
       isCreator: false,
-      sessionId: NaN
+      currentPlayerId: ""
     };
     _this.leaveGame = _this.leaveGame.bind(_this);
     return _this;
@@ -910,14 +833,14 @@ var Lobby = function (_React$Component) {
       var currentPlayer = passedState.currentPlayer;
 
       // Generate session for Player's UID 
-      var userSessionId = this.genUserSessionID();
-      currentPlayer.setUID(userSessionId);
+      var generatedPlayerId = this.genPlayerId();
+      currentPlayer.setUID(generatedPlayerId);
 
       // Update the local lobby with this user.
       this.setState({
         players: this.state.players.concat(currentPlayer),
         isCreator: passedState.isCreator,
-        sessionId: userSessionId
+        currPlayerId: generatedPlayerId
       }, function () {
         // Either create a new lobby in db or update the lobby in db.
         if (_this2.state.isCreator) {
@@ -995,11 +918,11 @@ var Lobby = function (_React$Component) {
       });
     }
 
-    // Generate a session ID/UID for the user.
+    // Generate a player ID/UID for the user.
 
   }, {
-    key: 'genUserSessionID',
-    value: function genUserSessionID() {
+    key: 'genPlayerId',
+    value: function genPlayerId() {
       // Credit: https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
       function s4() {
         return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
@@ -1072,7 +995,7 @@ var Lobby = function (_React$Component) {
 exports.default = Lobby;
 
 /***/ }),
-/* 18 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1091,7 +1014,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactSpeechRecognition = __webpack_require__(19);
+var _reactSpeechRecognition = __webpack_require__(18);
 
 var _reactSpeechRecognition2 = _interopRequireDefault(_reactSpeechRecognition);
 
@@ -1099,7 +1022,7 @@ var _styledComponents = __webpack_require__(2);
 
 var _styledComponents2 = _interopRequireDefault(_styledComponents);
 
-var _socket = __webpack_require__(5);
+var _socket = __webpack_require__(6);
 
 var _socket2 = _interopRequireDefault(_socket);
 
@@ -1126,6 +1049,7 @@ var options = {
 var SERVER_ENDPOINT = "http://127.0.0.1:3000";
 // Establish a socket connection
 var socket = (0, _socket2.default)(SERVER_ENDPOINT);
+var MAX_SCORE = 20;
 
 var Game = function (_React$Component) {
   _inherits(Game, _React$Component);
@@ -1138,9 +1062,11 @@ var Game = function (_React$Component) {
     _this.state = {
       lobbyId: _this.props.match.params.id,
       players: [],
-      sessionId: NaN,
+      currentPlayerId: "",
       tonguetwisters: [],
-      currTongueTwisterIndex: 0
+      currTongueTwisterIndex: 0,
+      isUserWinner: false,
+      winningPlayer: {}
     };
     _this.updateScore = _this.updateScore.bind(_this);
     return _this;
@@ -1156,7 +1082,7 @@ var Game = function (_React$Component) {
       // Update the local lobby with this user.
       this.setState({
         players: passedState.players,
-        sessionId: passedState.sessionId
+        currentPlayerId: passedState.sessionId
       });
 
       // Update scores.
@@ -1164,6 +1090,27 @@ var Game = function (_React$Component) {
         _this2.setState({
           players: data.players
         });
+        // Check if a player won.
+        for (var i = 0; i < data.players.length; i++) {
+          if (data.players[i].score > MAX_SCORE) {
+            socket.emit('gameOverServer', data.players[i]);
+          }
+        }
+      });
+
+      // Someone won, determine if this user was winner or loser 
+      socket.on('gameOverClient', function (data) {
+        if (data.UID == _this2.state.currentPlayerId) {
+          _this2.setState({
+            isUserWinner: true,
+            winningPlayer: data
+          });
+        } else {
+          _this2.setState({
+            isUserWinner: false,
+            winningPlayer: data
+          });
+        }
       });
 
       // Fetch tongue twisters from server
@@ -1227,7 +1174,6 @@ var Game = function (_React$Component) {
       var currentTTStripped = currentTT.split(' ').join('').replace(/[?.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").toLowerCase().repeat(repeatCount);
 
       var levenshteinScore = this.levenshtein(userResponseStripped, currentTTStripped);
-
       // Low levenshtein score means user got a really good score (inverse relationship). 
       var score = currentTTStripped.length - levenshteinScore;
       if (score < 0) {
@@ -1261,8 +1207,6 @@ var Game = function (_React$Component) {
   }, {
     key: 'render',
     value: function render() {
-      var _this3 = this;
-
       var _props = this.props,
           transcript = _props.transcript,
           resetTranscript = _props.resetTranscript,
@@ -1274,6 +1218,56 @@ var Game = function (_React$Component) {
       if (!browserSupportsSpeechRecognition) {
         return null;
       }
+      var gamePlay = this.buildGamePlayPage(transcript, resetTranscript, startListening, abortListening);
+
+      var pageToDisplay = void 0;
+      // Check if a player has been determined to be the winner yet
+      if (Object.keys(this.state.winningPlayer).length === 0 && this.state.winningPlayer.constructor === Object) {
+        pageToDisplay = gamePlay;
+      } else {
+        if (this.state.isUserWinner) {
+          pageToDisplay = _react2.default.createElement(
+            'h2',
+            null,
+            '\uD83C\uDF89Congrats ',
+            this.state.winningPlayer.username,
+            ', you won!\uD83C\uDF89'
+          );
+        } else {
+          pageToDisplay = _react2.default.createElement(
+            'h2',
+            null,
+            'Game over :( you lost to ',
+            this.state.winningPlayer.username
+          );
+        }
+      }
+
+      return _react2.default.createElement(
+        Container,
+        null,
+        _react2.default.createElement(
+          'h1',
+          null,
+          'Tongue Twister Racer'
+        ),
+        pageToDisplay
+      );
+    }
+
+    /**
+     * Build out the JSX of the Gameplay page. Shows prompt, score, button to record, etc.
+     * @param {*} transcript 
+     * @param {*} resetTranscript 
+     * @param {*} startListening 
+     * @param {*} abortListening 
+     */
+
+  }, {
+    key: 'buildGamePlayPage',
+    value: function buildGamePlayPage(transcript, resetTranscript, startListening, abortListening) {
+      var _this3 = this;
+
       var userList = this.state.players.map(function (player) {
         return _react2.default.createElement(
           'li',
@@ -1299,10 +1293,10 @@ var Game = function (_React$Component) {
         );
       }
 
+      // Build a prompt from the current Tongue Twister and Repeat Count
       var tongueTwisterPrompt = void 0;
       var currentTT;
       var repeatCount;
-      // Get the current tongue twister to show user.
       if (this.state.tonguetwisters.length > 0) {
         currentTT = this.state.tonguetwisters[this.state.currTongueTwisterIndex]['tonguetwister'];
         repeatCount = this.state.tonguetwisters[this.state.currTongueTwisterIndex]['repeat'];
@@ -1315,14 +1309,10 @@ var Game = function (_React$Component) {
         tongueTwisterPrompt = 'Loading...';
       }
 
-      return _react2.default.createElement(
-        Container,
+      // Wrap everything in a div to return as a JSX element.
+      var gamePlay = _react2.default.createElement(
+        'div',
         null,
-        _react2.default.createElement(
-          'h1',
-          null,
-          'Tongue Twister Racer'
-        ),
         _react2.default.createElement(
           'h2',
           null,
@@ -1331,7 +1321,9 @@ var Game = function (_React$Component) {
         _react2.default.createElement(
           'h4',
           null,
-          'First to 300 points wins!'
+          'First to ',
+          MAX_SCORE,
+          ' points wins!'
         ),
         userList,
         _react2.default.createElement('br', null),
@@ -1365,6 +1357,7 @@ var Game = function (_React$Component) {
         ),
         _react2.default.createElement('br', null)
       );
+      return gamePlay;
     }
   }]);
 
@@ -1374,13 +1367,13 @@ var Game = function (_React$Component) {
 exports.default = (0, _reactSpeechRecognition2.default)(options)(Game);
 
 /***/ }),
-/* 19 */
+/* 18 */
 /***/ (function(module, exports) {
 
 module.exports = require("react-speech-recognition");
 
 /***/ }),
-/* 20 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1406,22 +1399,106 @@ function NoMatch() {
 }
 
 /***/ }),
-/* 21 */
+/* 20 */
 /***/ (function(module, exports) {
 
 module.exports = require("http");
 
 /***/ }),
-/* 22 */
+/* 21 */
 /***/ (function(module, exports) {
 
 module.exports = require("socket.io");
 
 /***/ }),
-/* 23 */
+/* 22 */
 /***/ (function(module, exports) {
 
 module.exports = {"mongoURI":"mongodb://root:root123@ds231133.mlab.com:31133/tonguetwisterracer"}
+
+/***/ }),
+/* 23 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var Game = __webpack_require__(24);
+
+// Create and Save a new Game 
+exports.create = function (req, res) {
+    // Validate request
+    if (!req.body.state) {
+        return res.status(400).send(JSON.stringify({
+            message: "Body can not be empty"
+        }));
+    }
+
+    // Create a Game 
+    var game = new Game({
+        lobbyId: req.body.state.lobbyId,
+        players: req.body.state.players
+    });
+
+    // Save Game in the database
+    game.save().then(function (data) {
+        res.json(data);
+    }).catch(function (err) {
+        res.status(500).send({
+            message: err.message || "Some error occurred while creating the Game."
+        });
+    });
+};
+
+// Join a game lobby identified by the lobbyId in the request
+exports.join = function (req, res) {
+    // First find by lobbyId.
+    Game.findOne({ lobbyId: req.body.state.lobbyId }, function (err, doc) {
+        // Get the actual documentId to update with the players list from the document attributes.
+        Game.findByIdAndUpdate(doc['_id'], { $set: { players: doc['players'].concat(req.body.state.players) } }, { new: true }, function (err, result) {
+            res.json({
+                'lobbyId': result['lobbyId'],
+                'players': result['players']
+            });
+        });
+    });
+};
+
+// Leaves a game lobby identified by the lobbyId in the request
+exports.leave = function (req, res) {
+    // First find by lobbyId.
+    Game.findOne({ lobbyId: req.body.state.lobbyId }, function (err, doc) {
+        // Get the actual documentId to update with the players list from the document attributes.
+        Game.findByIdAndUpdate(doc['_id'], {
+            $pull: { 'players': {
+                    'UID': req.body.state.currentPlayerId
+                }
+            }
+        }, { 'new': true }, function (err, result) {
+            res.json({
+                'lobbyId': result['lobbyId'],
+                'players': result['players']
+            });
+        });
+    });
+};
+
+// Leaves a game lobby identified by the lobbyId in the request
+exports.updateScoreboard = function (req, res) {
+    console.log(req.body.state);
+    // First find the proper Game by lobbyId.
+    Game.findOneAndUpdate({ lobbyId: req.body.state.lobbyId, 'players.UID': req.body.state.currentPlayerId }, { $inc: { "players.$.score": req.body.score } }, // increment the user's score 
+    { 'new': true }, function (err, result) {
+        if (err) {
+            console.log('error', err);
+        } else {
+            res.json({
+                'lobbyId': result['lobbyId'],
+                'players': result['players']
+            });
+        }
+    });
+};
 
 /***/ }),
 /* 24 */
@@ -1430,7 +1507,7 @@ module.exports = {"mongoURI":"mongodb://root:root123@ds231133.mlab.com:31133/ton
 "use strict";
 
 
-var mongoose = __webpack_require__(7);
+var mongoose = __webpack_require__(4);
 
 // Basic Game Schema, might change later.
 var GameSchema = mongoose.Schema({
@@ -1465,7 +1542,7 @@ exports.get = function (req, res) {
 "use strict";
 
 
-var mongoose = __webpack_require__(7);
+var mongoose = __webpack_require__(4);
 
 // Tongue Twister Schema
 var TongueTwisterSchema = mongoose.Schema({

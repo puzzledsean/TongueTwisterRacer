@@ -62,7 +62,7 @@ exports.leave = (req, res) => {
                 doc['_id'],
                 {
                     $pull: { 'players' : {
-                        'UID': req.body.state.sessionId,
+                        'UID': req.body.state.currentPlayerId,
                         }
                     }
                 },
@@ -80,9 +80,10 @@ exports.leave = (req, res) => {
 
 // Leaves a game lobby identified by the lobbyId in the request
 exports.updateScoreboard = (req, res) => {
+    console.log(req.body.state)
     // First find the proper Game by lobbyId.
     Game.findOneAndUpdate(
-        {lobbyId: req.body.state.lobbyId, 'players.UID': req.body.state.sessionId}, 
+        {lobbyId: req.body.state.lobbyId, 'players.UID': req.body.state.currentPlayerId}, 
         {$inc: {"players.$.score": req.body.score}}, // increment the user's score 
         {'new': true},
         function(err,result) {
