@@ -5,3 +5,5 @@ dist
 yarn.lock
 .DS_Store
 auth.json
+mongoimport.sh
+tonguetwisters.json

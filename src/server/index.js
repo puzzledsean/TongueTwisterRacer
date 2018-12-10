@@ -12,6 +12,9 @@ const http = require("http");
 const socketIo = require("socket.io");
 const db = require('../../auth.json')['mongoURI'];
 
+const game = require('./controllers/GameController.js');
+const tonguetwisters = require('./controllers/TongueTwisterController.js');
+
 // Set up database to MLab
 var mongoose = require('mongoose');
 mongoose
@@ -58,7 +61,9 @@ io.on("connection", socket => {
   })
 });
 
-const game = require('./controllers/GameController.js');
+
+// Get a list of tongue twisters from MongoDB.
+app.get("/api/tonguetwisters", tonguetwisters.get)
 
 // Creates a lobby in MongoDB.
 app.post("/api/createLobby", game.create)
@@ -69,7 +74,7 @@ app.post("/api/joinLobby", game.join)
 // Leaves a lobby in MongoDB.
 app.post("/api/leaveLobby", game.leave)
 
-// Leaves a lobby in MongoDB.
+// Updates score of a player in MongoDB.
 app.post("/api/updateScoreboard", game.updateScoreboard);
 
 app.get("*", (req, res, next) => {

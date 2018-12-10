@@ -34,6 +34,8 @@ class Game extends React.Component {
         lobbyId: this.props.match.params.id,
         players: [],
         sessionId: NaN,
+        tonguetwisters: [],
+        currTongueTwisterIndex: 0,
       }
       this.updateScore = this.updateScore.bind(this);
     }
@@ -53,6 +55,21 @@ class Game extends React.Component {
           players: data.players,
         })
       })
+
+      // Fetch tongue twisters from server
+      fetch(SERVER_ENDPOINT + '/api/tonguetwisters', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        }).then(response => {
+          response.json().then(data => {
+            this.setState({
+              tonguetwisters: data['tonguetwisters'],
+            })
+          })
+        });
     }
 
     levenshtein(a, b){
@@ -90,33 +107,43 @@ class Game extends React.Component {
         return matrix[b.length][a.length];
       };
 
-    updateScore(userResponse, currentTT) {
-        var userResponseStripped = userResponse.split(' ').join('')
-        var currentTTStripped = currentTT.split(' ').join('')
-        
-        var levenshteinScore = this.levenshtein(userResponseStripped, currentTTStripped)
+    updateScore(userResponse, currentTT, repeatCount) {
+      // get user's response without spaces
+      var userResponseStripped = userResponse.split(' ').join('').toLowerCase()
 
-        // Low levenshtein score means user got a really good score (inverse relationship). 
-        var score = currentTTStripped.length - levenshteinScore
-        if(score < 0) {
-          score = 0;
-        }
+      // remove all punctuation, spaces, and multiply it by repeat count
+      var currentTTStripped = currentTT.split(' ').join('').replace(/[?.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").toLowerCase().repeat(repeatCount)
+      
+      var levenshteinScore = this.levenshtein(userResponseStripped, currentTTStripped)
 
-        fetch(SERVER_ENDPOINT + '/api/updateScoreboard', {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            'state': this.state,
-            'score': score, 
-          })
-        }).then(response => {
-          response.json().then(data => {
-            socket.emit('scoreUpdatedToServer', data);
-          })
-        });
+      // Low levenshtein score means user got a really good score (inverse relationship). 
+      var score = currentTTStripped.length - levenshteinScore
+      if(score < 0) {
+        score = 0;
+      }
+
+      // Update score board
+      fetch(SERVER_ENDPOINT + '/api/updateScoreboard', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          'state': this.state,
+          'score': score, 
+        })
+      }).then(response => {
+        response.json().then(data => {
+          socket.emit('scoreUpdatedToServer', data);
+        })
+      });
+    }
+
+    getNextTongueTwister() {
+      this.setState({
+        currTongueTwisterIndex: this.state.currTongueTwisterIndex + 1,
+      })
     }
 
     render() {
@@ -129,14 +156,28 @@ class Game extends React.Component {
             <li key={player.username}>{player.username}: {player.score}</li>
         );
 
-        let userResponse;
+        var userResponse;
         if(transcript) {
             userResponse = <div>{transcript}</div>
         } else {
             userResponse = <div>...</div>
         }
 
-        var currentTT = 'She sells seashells by the seashore'
+        let tongueTwisterPrompt;
+        var currentTT;
+        var repeatCount;
+        // Get the current tongue twister to show user.
+        if(this.state.tonguetwisters.length > 0) {
+          currentTT = this.state.tonguetwisters[this.state.currTongueTwisterIndex]['tonguetwister']
+          repeatCount = this.state.tonguetwisters[this.state.currTongueTwisterIndex]['repeat']
+          if(repeatCount == 1) {
+            tongueTwisterPrompt = currentTT;
+          } else {
+            tongueTwisterPrompt = `${currentTT} (Repeat ${repeatCount} times)`;
+          }
+        } else {
+          tongueTwisterPrompt = `Loading...`;
+        }
 
         return (
             <Container>
@@ -152,7 +193,7 @@ class Game extends React.Component {
             <br/>
 
             <h3>Prompt</h3>
-            {currentTT}
+            {tongueTwisterPrompt}
 
             <h3>Your response</h3>
             {userResponse}
@@ -160,7 +201,7 @@ class Game extends React.Component {
             <br/>
             <Button onClick={() => {resetTranscript(); startListening();}}>Record</Button>
             <br/>
-            <Button onClick={() => {resetTranscript(); abortListening(); this.updateScore(transcript, currentTT); }}>Stop Recording and Submit</Button>
+            <Button onClick={() => {resetTranscript(); abortListening(); this.updateScore(transcript, currentTT, repeatCount); this.getNextTongueTwister(); }}>Stop Recording and Submit</Button>
             <br/>
         </Container> 
         );

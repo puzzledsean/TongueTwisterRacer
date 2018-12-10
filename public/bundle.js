@@ -29458,7 +29458,9 @@ var Game = function (_React$Component) {
     _this.state = {
       lobbyId: _this.props.match.params.id,
       players: [],
-      sessionId: NaN
+      sessionId: NaN,
+      tonguetwisters: [],
+      currTongueTwisterIndex: 0
     };
     _this.updateScore = _this.updateScore.bind(_this);
     return _this;
@@ -29481,6 +29483,21 @@ var Game = function (_React$Component) {
       socket.on('scoreUpdatedToClient', function (data) {
         _this2.setState({
           players: data.players
+        });
+      });
+
+      // Fetch tongue twisters from server
+      fetch(SERVER_ENDPOINT + '/api/tonguetwisters', {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }).then(function (response) {
+        response.json().then(function (data) {
+          _this2.setState({
+            tonguetwisters: data['tonguetwisters']
+          });
         });
       });
     }
@@ -29522,9 +29539,12 @@ var Game = function (_React$Component) {
     }
   }, {
     key: 'updateScore',
-    value: function updateScore(userResponse, currentTT) {
-      var userResponseStripped = userResponse.split(' ').join('');
-      var currentTTStripped = currentTT.split(' ').join('');
+    value: function updateScore(userResponse, currentTT, repeatCount) {
+      // get user's response without spaces
+      var userResponseStripped = userResponse.split(' ').join('').toLowerCase();
+
+      // remove all punctuation, spaces, and multiply it by repeat count
+      var currentTTStripped = currentTT.split(' ').join('').replace(/[?.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").toLowerCase().repeat(repeatCount);
 
       var levenshteinScore = this.levenshtein(userResponseStripped, currentTTStripped);
 
@@ -29534,6 +29554,7 @@ var Game = function (_React$Component) {
         score = 0;
       }
 
+      // Update score board
       fetch(SERVER_ENDPOINT + '/api/updateScoreboard', {
         method: 'POST',
         headers: {
@@ -29548,6 +29569,13 @@ var Game = function (_React$Component) {
         response.json().then(function (data) {
           socket.emit('scoreUpdatedToServer', data);
         });
+      });
+    }
+  }, {
+    key: 'getNextTongueTwister',
+    value: function getNextTongueTwister() {
+      this.setState({
+        currTongueTwisterIndex: this.state.currTongueTwisterIndex + 1
       });
     }
   }, {
@@ -29576,7 +29604,7 @@ var Game = function (_React$Component) {
         );
       });
 
-      var userResponse = void 0;
+      var userResponse;
       if (transcript) {
         userResponse = _react2.default.createElement(
           'div',
@@ -29591,7 +29619,21 @@ var Game = function (_React$Component) {
         );
       }
 
-      var currentTT = 'She sells seashells by the seashore';
+      var tongueTwisterPrompt = void 0;
+      var currentTT;
+      var repeatCount;
+      // Get the current tongue twister to show user.
+      if (this.state.tonguetwisters.length > 0) {
+        currentTT = this.state.tonguetwisters[this.state.currTongueTwisterIndex]['tonguetwister'];
+        repeatCount = this.state.tonguetwisters[this.state.currTongueTwisterIndex]['repeat'];
+        if (repeatCount == 1) {
+          tongueTwisterPrompt = currentTT;
+        } else {
+          tongueTwisterPrompt = currentTT + ' (Repeat ' + repeatCount + ' times)';
+        }
+      } else {
+        tongueTwisterPrompt = 'Loading...';
+      }
 
       return _react2.default.createElement(
         Container,
@@ -29618,7 +29660,7 @@ var Game = function (_React$Component) {
           null,
           'Prompt'
         ),
-        currentTT,
+        tongueTwisterPrompt,
         _react2.default.createElement(
           'h3',
           null,
@@ -29637,7 +29679,7 @@ var Game = function (_React$Component) {
         _react2.default.createElement(
           Button,
           { onClick: function onClick() {
-              resetTranscript();abortListening();_this3.updateScore(transcript, currentTT);
+              resetTranscript();abortListening();_this3.updateScore(transcript, currentTT, repeatCount);_this3.getNextTongueTwister();
             } },
           'Stop Recording and Submit'
         ),
